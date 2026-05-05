@@ -239,7 +239,7 @@
     display: flex; align-items: center; justify-content: center;
   }
   .color-swatch:hover { transform: scale(1.1); }
-  .color-swatch.selected { border-color: #fff; }
+  .color-swatch.selected { border-color: #fff; background: var(--accent) !important; transform: scale(1.15); box-shadow: 0 0 12px rgba(233,69,96,0.5); }
   .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
   .photo-upload-area {
     border: 2px dashed var(--text-dim); border-radius: 12px; padding: 20px;
@@ -437,7 +437,7 @@
   <button class="btn-icon" onclick="exportSchedule()">💾</button>
   <button class="btn-icon" onclick="document.getElementById('importInput').click()">📂</button>
   <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSchedule(event)">
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;"><button class="btn-icon" title="Send Feedback">💬</button></a>
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;"><button class="btn-warning" style="background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;font-size:0.95rem;padding:10px 18px;">💬 Send Feedback</button></a>
 </div>
 
 <!-- SETTINGS PANEL -->
