@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Tap Along — EFT for Kids</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; font-family:'Avenir','Segoe UI',sans-serif; }
+body { background:#1a1a2e; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:center; touch-action:manipulation; -webkit-user-select:none; user-select:none; }
+
+/* --- START SCREEN --- */
+#startScreen { text-align:center; padding:20px; }
+#startScreen h1 { font-size:2.2em; margin-bottom:8px; }
+#startScreen h1 span { font-size:1.2em; }
+#startScreen p { color:#aaa; font-size:1em; margin-bottom:24px; }
+.mode-btn { display:block; width:260px; margin:10px auto; padding:16px 20px; border:none; border-radius:16px; font-size:1.1em; font-weight:700; cursor:pointer; transition:transform 0.15s; }
+.mode-btn:active { transform:scale(0.95); }
+#btnQuick { background:linear-gradient(135deg,#4ecdc4,#44a08d); color:#fff; }
+#btnFull { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
+#btnExtended { background:linear-gradient(135deg,#f093fb,#f5576c); color:#fff; }
+.mode-sub { font-size:0.75em; font-weight:400; opacity:0.85; display:block; margin-top:4px; }
+
+/* --- TAP SCREEN --- */
+#tapScreen { display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; position:relative; }
+#tapTitle { font-size:1.3em; font-weight:700; margin-bottom:4px; text-align:center; }
+#tapInstruction { font-size:0.95em; color:#aaa; margin-bottom:16px; text-align:center; padding:0 20px; }
+
+/* Body outline */
+#bodyContainer { position:relative; width:280px; height:420px; margin:0 auto; }
+#bodyOutline { width:100%; height:100%; }
+.tap-point { position:absolute; width:48px; height:48px; border-radius:50%; border:3px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:1.4em; transition:all 0.3s; cursor:pointer; }
+.tap-point.active { border-color:#4ecdc4; background:rgba(78,205,196,0.3); box-shadow:0 0 20px rgba(78,205,196,0.5); animation:pulse-tap 0.8s infinite; }
+.tap-point.done { border-color:#44a08d; background:rgba(68,160,141,0.15); opacity:0.5; }
+@keyframes pulse-tap { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+
+/* Point positions on body outline */
+.tp-karate  { top:260px; left:-10px; }
+.tp-eyebrow { top:32px; left:95px; }
+.tp-sideeye { top:52px; left:170px; }
+.tp-undereye { top:72px; left:130px; }
+.tp-undernose { top:95px; left:115px; }
+.tp-chin    { top:118px; left:115px; }
+.tp-collar  { top:165px; left:75px; }
+.tp-underarm { top:230px; left:195px; }
+.tp-tophead { top:2px; left:115px; }
+
+/* Tap counter */
+#tapCounter { font-size:3em; font-weight:900; color:#4ecdc4; margin:8px 0; }
+#tapLabel { font-size:0.85em; color:#888; }
+
+/* Affirmation */
+#affirmation { font-size:1.1em; color:#f093fb; font-style:italic; text-align:center; min-height:2.5em; padding:0 24px; margin-top:8px; transition:opacity 0.3s; }
+
+/* Progress bar */
+#progressWrap { position:absolute; bottom:60px; left:20px; right:20px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; }
+#progressBar { height:100%; background:linear-gradient(90deg,#4ecdc4,#667eea); border-radius:4px; transition:width 0.3s; width:0%; }
+#progressLabel { position:absolute; bottom:72px; left:20px; font-size:0.75em; color:#888; }
+
+/* Controls */
+#controls { position:absolute; bottom:16px; display:flex; gap:12px; }
+#controls button { padding:10px 24px; border:none; border-radius:12px; font-size:0.95em; font-weight:600; cursor:pointer; }
+#btnPause { background:#667eea; color:#fff; }
+#btnStop { background:#555; color:#fff; }
+
+/* --- BREATHING SCREEN --- */
+#breathScreen { display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; }
+#breathTitle { font-size:1.3em; font-weight:700; margin-bottom:16px; }
+#breathOrb { width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,#4ecdc4,#44a08d); transition:transform 1.5s ease-in-out; }
+#breathOrb.expand { transform:scale(1.8); }
+#breathLabel { font-size:1.4em; font-weight:600; margin-top:20px; color:#4ecdc4; }
+
+/* --- DONE SCREEN --- */
+#doneScreen { display:none; text-align:center; padding:20px; }
+#doneScreen h1 { font-size:2em; margin-bottom:8px; }
+#doneScreen .stars { font-size:2.5em; margin:16px 0; }
+#doneScreen p { color:#aaa; margin-bottom:20px; }
+#btnRestart { padding:14px 40px; border:none; border-radius:16px; background:linear-gradient(135deg,#4ecdc4,#44a08d); color:#fff; font-size:1.1em; font-weight:700; cursor:pointer; }
+
+/* Fullscreen helper */
+.hidden { display:none !important; }
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div id="startScreen">
+  <h1><span>👆</span> Tap Along</h1>
+  <p>EFT Tapping for Kids</p>
+  <button class="mode-btn" id="btnQuick" onclick="startSession('quick')">
+    Quick Tap
+    <span class="mode-sub">1 minute • 4 points</span>
+  </button>
+  <button class="mode-btn" id="btnFull" onclick="startSession('full')">
+    Full Round
+    <span class="mode-sub">3-5 minutes • All 9 points</span>
+  </button>
+  <button class="mode-btn" id="btnExtended" onclick="startSession('extended')">
+    Extended Session
+    <span class="mode-sub">8-10 minutes • 3 full rounds</span>
+  </button>
+</div>
+
+<!-- TAP SESSION -->
+<div id="tapScreen">
+  <div id="tapTitle">Tap here →</div>
+  <div id="tapInstruction">Tap gently with two fingers, 5-7 times</div>
+
+  <div id="bodyContainer">
+    <!-- SVG body outline -->
+    <svg id="bodyOutline" viewBox="0 0 280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Head -->
+      <ellipse cx="140" cy="55" rx="38" ry="45" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+      <!-- Neck -->
+      <line x1="140" y1="100" x2="140" y2="130" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+      <!-- Torso -->
+      <path d="M90 130 L90 280 Q90 300 110 300 L170 300 Q190 300 190 280 L190 130 Z" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="rgba(255,255,255,0.02)"/>
+      <!-- Arms -->
+      <path d="M90 145 L40 240 L30 260" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="none"/>
+      <path d="M190 145 L240 240 L250 260" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="none"/>
+      <!-- Legs -->
+      <line x1="120" y1="300" x2="110" y2="410" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+      <line x1="160" y1="300" x2="170" y2="410" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+    </svg>
+
+    <!-- Tap points -->
+    <div class="tap-point tp-karate" data-point="karate" onclick="handleTap(this)">🤚</div>
+    <div class="tap-point tp-eyebrow" data-point="eyebrow" onclick="handleTap(this)">👁️</div>
+    <div class="tap-point tp-sideeye" data-point="sideeye" onclick="handleTap(this)">👁️</div>
+    <div class="tap-point tp-undereye" data-point="undereye" onclick="handleTap(this)">😌</div>
+    <div class="tap-point tp-undernose" data-point="undernose" onclick="handleTap(this)">👃</div>
+    <div class="tap-point tp-chin" data-point="chin" onclick="handleTap(this)">😊</div>
+    <div class="tap-point tp-collar" data-point="collar" onclick="handleTap(this)">💪</div>
+    <div class="tap-point tp-underarm" data-point="underarm" onclick="handleTap(this)">🤗</div>
+    <div class="tap-point tp-tophead" data-point="tophead" onclick="handleTap(this)">🧠</div>
+  </div>
+
+  <div id="tapCounter">0</div>
+  <div id="tapLabel">taps</div>
+  <div id="affirmation"></div>
+
+  <div id="progressWrap"><div id="progressBar"></div></div>
+  <div id="progressLabel">Point 1 of 9</div>
+
+  <div id="controls">
+    <button id="btnPause" onclick="togglePause()">⏸ Pause</button>
+    <button id="btnStop" onclick="stopSession()">✕ Stop</button>
+  </div>
+</div>
+
+<!-- BREATHING BREAK -->
+<div id="breathScreen">
+  <div id="breathTitle">Breathing Break</div>
+  <div id="breathOrb"></div>
+  <div id="breathLabel">Breathe in...</div>
+</div>
+
+<!-- DONE -->
+<div id="doneScreen">
+  <h1>Amazing Job! 🌟</h1>
+  <div class="stars">⭐⭐⭐</div>
+  <p id="doneMsg">You completed a full tapping round!</p>
+  <p id="doneStat" style="color:#4ecdc4; font-weight:600;"></p>
+  <button id="btnRestart" onclick="resetAll()">Tap Again</button>
+</div>
+
+<script>
+// --- CONFIG ---
+const POINTS_FULL = ['karate','eyebrow','sideeye','undereye','undernose','chin','collar','underarm','tophead'];
+const POINTS_QUICK = ['karate','eyebrow','collar','tophead'];
+
+const POINT_NAMES = {
+  karate:'Karate Chop', eyebrow:'Eyebrow', sideeye:'Side of Eye', undereye:'Under Eye',
+  undernose:'Under Nose', chin:'Chin Point', collar:'Collarbone', underarm:'Under Arm', tophead:'Top of Head'
+};
+
+const POINT_INSTRUCTIONS = {
+  karate:'Tap the side of your hand gently',
+  eyebrow:'Tap at the start of your eyebrow',
+  sideeye:'Tap beside the outside of your eye',
+  undereye:'Tap on the bone under your eye',
+  undernose:'Tap between your nose and lip',
+  chin:'Tap in the dip below your bottom lip',
+  collar:'Tap just below your collarbone',
+  underarm:'Tap under your arm, on your side',
+  tophead:'Tap gently on top of your head'
+};
+
+const AFFIRMATIONS = [
+  "I am safe right now",
+  "I am doing a great job",
+  "It's okay to feel this way",
+  "I am brave and strong",
+  "I can handle this",
+  "My body is calming down",
+  "I choose to feel peaceful",
+  "I am loved just as I am",
+  "This feeling will pass",
+  "I breathe in calm, breathe out worry",
+  "I am getting better at this",
+  "My body knows how to be calm",
+  "I am in charge of how I feel",
+  "Every tap makes me calmer",
+  "I trust myself"
+];
+
+const TAPS_PER_POINT = 7;
+
+let mode = 'full';
+let points = [];
+let currentPointIdx = 0;
+let tapCount = 0;
+let totalTaps = 0;
+let roundsTotal = 1;
+let roundsDone = 0;
+let paused = false;
+let audioCtx = null;
+
+// --- AUDIO ---
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playTapSound() {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain); gain.connect(audioCtx.destination);
+  osc.frequency.value = 600 + Math.random()*200;
+  osc.type = 'sine';
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+  osc.start(); osc.stop(audioCtx.currentTime + 0.15);
+}
+
+function playDoneSound() {
+  if (!audioCtx) return;
+  [523.25, 659.25, 783.99].forEach((f,i) => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.frequency.value = f; osc.type = 'sine';
+    gain.gain.setValueAtTime(0.12, audioCtx.currentTime + i*0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.15 + 0.4);
+    osc.start(audioCtx.currentTime + i*0.15);
+    osc.stop(audioCtx.currentTime + i*0.15 + 0.4);
+  });
+}
+
+function vibrate(ms) {
+  if (navigator.vibrate) navigator.vibrate(ms || 30);
+}
+
+// --- SESSION CONTROL ---
+function startSession(m) {
+  initAudio();
+  mode = m;
+  if (m === 'quick') { points = [...POINTS_QUICK]; roundsTotal = 1; }
+  else if (m === 'full') { points = [...POINTS_FULL]; roundsTotal = 1; }
+  else { points = [...POINTS_FULL]; roundsTotal = 3; }
+
+  currentPointIdx = 0; tapCount = 0; totalTaps = 0; roundsDone = 0; paused = false;
+
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('tapScreen').style.display = 'flex';
+  activatePoint();
+}
+
+function activatePoint() {
+  tapCount = 0;
+  document.getElementById('tapCounter').textContent = '0';
+
+  // Reset all points
+  document.querySelectorAll('.tap-point').forEach(el => {
+    el.classList.remove('active','done');
+    if (mode === 'quick' && !POINTS_QUICK.includes(el.dataset.point)) {
+      el.style.opacity = '0.15';
+    } else {
+      el.style.opacity = '1';
+    }
+  });
+
+  // Mark done points
+  for (let i = 0; i < currentPointIdx; i++) {
+    const done = document.querySelector(`[data-point="${points[i]}"]`);
+    if (done) done.classList.add('done');
+  }
+
+  // Activate current
+  const current = points[currentPointIdx];
+  const el = document.querySelector(`[data-point="${current}"]`);
+  if (el) el.classList.add('active');
+
+  document.getElementById('tapTitle').textContent = POINT_NAMES[current];
+  document.getElementById('tapInstruction').textContent = POINT_INSTRUCTIONS[current];
+  document.getElementById('affirmation').textContent = AFFIRMATIONS[Math.floor(Math.random()*AFFIRMATIONS.length)];
+
+  const totalPoints = points.length * roundsTotal;
+  const donePoints = roundsDone * points.length + currentPointIdx;
+  document.getElementById('progressLabel').textContent = `Point ${donePoints+1} of ${totalPoints}`;
+  document.getElementById('progressBar').style.width = `${(donePoints/totalPoints)*100}%`;
+}
+
+function handleTap(el) {
+  if (paused) return;
+  const point = el.dataset.point;
+  if (point !== points[currentPointIdx]) return;
+
+  tapCount++;
+  totalTaps++;
+  document.getElementById('tapCounter').textContent = tapCount;
+  playTapSound();
+  vibrate(30);
+
+  // Flash effect
+  el.style.transform = 'scale(1.3)';
+  setTimeout(() => el.style.transform = '', 150);
+
+  if (tapCount >= TAPS_PER_POINT) {
+    el.classList.remove('active');
+    el.classList.add('done');
+    currentPointIdx++;
+
+    if (currentPointIdx >= points.length) {
+      roundsDone++;
+      if (roundsDone < roundsTotal) {
+        currentPointIdx = 0;
+        showBreathingBreak(() => activatePoint());
+      } else {
+        finishSession();
+      }
+    } else {
+      // Brief breathing break every 3 points
+      if (currentPointIdx % 3 === 0 && mode !== 'quick') {
+        showBreathingBreak(() => activatePoint());
+      } else {
+        activatePoint();
+      }
+    }
+  }
+}
+
+function showBreathingBreak(callback) {
+  document.getElementById('tapScreen').style.display = 'none';
+  document.getElementById('breathScreen').style.display = 'flex';
+  const orb = document.getElementById('breathOrb');
+  const label = document.getElementById('breathLabel');
+
+  let step = 0;
+  const breathCycle = () => {
+    if (step === 0) { orb.classList.add('expand'); label.textContent = 'Breathe in...'; }
+    else if (step === 1) { label.textContent = 'Hold...'; }
+    else if (step === 2) { orb.classList.remove('expand'); label.textContent = 'Breathe out...'; }
+    else if (step === 3) { label.textContent = 'Relax...'; }
+    step++;
+    if (step <= 4) {
+      setTimeout(breathCycle, 1500);
+    } else {
+      document.getElementById('breathScreen').style.display = 'none';
+      document.getElementById('tapScreen').style.display = 'flex';
+      callback();
+    }
+  };
+  breathCycle();
+}
+
+function finishSession() {
+  document.getElementById('tapScreen').style.display = 'none';
+  playDoneSound();
+  vibrate([100,50,100,50,200]);
+
+  const names = {quick:'Quick Tap',full:'Full Round',extended:'Extended Session'};
+  document.getElementById('doneMsg').textContent = `You completed ${names[mode]}!`;
+  document.getElementById('doneStat').textContent = `${totalTaps} taps • ${points.length * roundsTotal} points`;
+  document.getElementById('doneScreen').style.display = 'block';
+}
+
+function togglePause() {
+  paused = !paused;
+  document.getElementById('btnPause').textContent = paused ? '▶ Resume' : '⏸ Pause';
+}
+
+function stopSession() {
+  document.getElementById('tapScreen').style.display = 'none';
+  document.getElementById('breathScreen').style.display = 'none';
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+
+function resetAll() {
+  document.getElementById('doneScreen').style.display = 'none';
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+
+// Unlock audio on first touch
+document.addEventListener('touchstart', initAudio, {once:true});
+document.addEventListener('click', initAudio, {once:true});
+</script>
+</body>
+</html>
