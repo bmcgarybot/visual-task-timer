@@ -867,8 +867,58 @@ function releaseWakeLock() {
 }
 // Re-acquire wake lock when page becomes visible again (iOS releases it on tab switch)
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && tasks.some(t => t.running)) requestWakeLock();
+  if(document.visibilityState === 'visible') {
+    // Re-unlock audio context on return (iOS suspends it when backgrounded)
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    // Re-acquire wake lock if timers still running
+    if(tasks.some(t => t.running)) requestWakeLock();
+    // Check if any timers completed while we were away
+    checkMissedCompletions();
+  }
 });
+
+// Track timers that completed while backgrounded
+let pendingSounds = [];
+
+function checkMissedCompletions() {
+  tasks.forEach(task => {
+    if(task._startedAt && task._remainingAtStart !== undefined && !task._completionHandled) {
+      const elapsed = Math.floor((Date.now() - task._startedAt) / 1000);
+      const remaining = Math.max(0, task._remainingAtStart - elapsed);
+      if(remaining <= 0 && task.running) {
+        // Timer finished while we were away — handle completion now
+        task.remaining = 0;
+        task.running = false;
+        clearInterval(timerIntervals[task.id]);
+        task._completionHandled = true;
+        // Play sound on next user tap (iOS won't allow auto-play after background)
+        pendingSounds.push(task.sound || 'chime');
+        sendNotification('⏰ Timer Done!', task.name + ' is complete!');
+        if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+        awardStar();
+        const card = document.getElementById('card-' + task.id);
+        if(card) card.classList.add('just-completed');
+      }
+    }
+  });
+  if(pendingSounds.length > 0) {
+    // Show a banner prompting them to tap — iOS needs a gesture to play audio after background
+    showTransition('⏰ Timer finished! Tap anywhere to hear the alert.');
+    render(); save();
+  }
+  if(!tasks.some(t => t.running)) releaseWakeLock();
+}
+
+// Play any pending sounds on the next user interaction (iOS audio unlock after background)
+function playPendingSounds() {
+  if(pendingSounds.length > 0) {
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    pendingSounds.forEach(s => playSound(s));
+    pendingSounds = [];
+  }
+}
+document.addEventListener('touchstart', playPendingSounds, { passive: true });
+document.addEventListener('click', playPendingSounds);
 
 // ===== NOTIFICATIONS =====
 let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'denied';
@@ -1006,6 +1056,7 @@ function render(){
 function startTask(id){
   const task=tasks.find(t=>t.id===id);if(!task||task.remaining<=0)return;
   task.running=true;
+  task._completionHandled=false;
   // Request notification permission on first timer start (needs user gesture)
   requestNotifPermission();
   // Keep screen on while timer runs (iOS will suspend JS otherwise)
@@ -1022,7 +1073,7 @@ function startTask(id){
     task.remaining=Math.max(0,task._remainingAtStart-elapsed);
     if(task.remaining<=settings.transitionWarn&&task.remaining>0&&(task._remainingAtStart-elapsed+1)>settings.transitionWarn){showTransition(`⏰ ${task.name} — ${settings.transitionWarn} seconds left!`);}
     if(task.remaining<=0){
-      task.remaining=0;task.running=false;clearInterval(timerIntervals[id]);
+      task.remaining=0;task.running=false;task._completionHandled=true;clearInterval(timerIntervals[id]);
       playSound(task.sound||'chime');
       // System notification (shows even on lock screen if permission granted)
       sendNotification('⏰ Timer Done!', task.name + ' is complete!');
