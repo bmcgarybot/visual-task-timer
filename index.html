@@ -845,6 +845,7 @@ let selectedEmoji = '⏰';
 let selectedProfileEmoji = '🧒';
 let selectedDays = [];
 let timerIntervals = {};
+let profileTimerState = {};  // stores running timer state per profile
 let rewardPhotoData = null;
 let taskPhotoData = null;
 
@@ -979,7 +980,27 @@ function renderProfiles(){
   const bar=document.getElementById('profileBar');
   bar.innerHTML=profiles.map(p=>`<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${p.emoji} ${p.name}</button>`).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
 }
-function switchProfile(id){activeProfileId=id;loadProfileTasks();render();renderRewardBar();save();}
+function switchProfile(id){
+  // Save current profile's tasks with their running state + interval references
+  profileTimerState[activeProfileId] = { tasks: tasks.map(t => ({...t})), intervals: {...timerIntervals} };
+  activeProfileId = id;
+  // Restore previous state for this profile (if any)
+  if (profileTimerState[id]) {
+    tasks = profileTimerState[id].tasks;
+    // Re-attach intervals for running tasks
+    Object.keys(timerIntervals).forEach(k => clearInterval(timerIntervals[k]));
+    timerIntervals = {};
+    tasks.forEach(t => {
+      if (t.running && t._startedAt) {
+        // Restart the interval from where it was
+        timerIntervals[t.id] = setInterval(() => timerTick(t.id), 1000);
+      }
+    });
+  } else {
+    loadProfileTasks();
+  }
+  render(); renderRewardBar(); save();
+}
 function openProfileModal(){selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModal').classList.add('open');}
 function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');}
 function pickProfileEmoji(el){selectedProfileEmoji=el.dataset.pemoji;el.parentElement.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===selectedProfileEmoji));}
@@ -1053,41 +1074,40 @@ function render(){
 }
 
 // ===== TIMERS =====
+function timerTick(id) {
+  const task = tasks.find(t => t.id === id);
+  if (!task) return;
+  const elapsed = Math.floor((Date.now() - task._startedAt) / 1000);
+  task.remaining = Math.max(0, task._remainingAtStart - elapsed);
+  if (task.remaining <= settings.transitionWarn && task.remaining > 0 && (task._remainingAtStart - elapsed + 1) > settings.transitionWarn) {
+    showTransition(`⏰ ${task.name} — ${settings.transitionWarn} seconds left!`);
+  }
+  if (task.remaining <= 0) {
+    task.remaining = 0; task.running = false; task._completionHandled = true;
+    clearInterval(timerIntervals[id]);
+    playSound(task.sound || 'chime');
+    sendNotification('⏰ Timer Done!', task.name + ' is complete!');
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+    if (!tasks.some(t => t.running)) releaseWakeLock();
+    awardStar();
+    const card = document.getElementById('card-' + task.id);
+    if (card) card.classList.add('just-completed');
+    const visible = getVisibleTasks(); const idx = visible.findIndex(t => t.id === id);
+    if (idx >= 0 && idx < visible.length - 1) { setTimeout(() => startTask(visible[idx + 1].id), 2000); }
+  }
+  render(); save();
+}
+
 function startTask(id){
   const task=tasks.find(t=>t.id===id);if(!task||task.remaining<=0)return;
   task.running=true;
   task._completionHandled=false;
-  // Request notification permission on first timer start (needs user gesture)
   requestNotifPermission();
-  // Keep screen on while timer runs (iOS will suspend JS otherwise)
   requestWakeLock();
-  /* Store the real clock time when this timer started (or resumed).
-     This lets us calculate correct remaining time even after the browser
-     was backgrounded/sleeping. */
   task._startedAt=Date.now();
   task._remainingAtStart=task.remaining;
   clearInterval(timerIntervals[id]);
-  timerIntervals[id]=setInterval(()=>{
-    /* Calculate remaining from real clock, not tick counting */
-    const elapsed=Math.floor((Date.now()-task._startedAt)/1000);
-    task.remaining=Math.max(0,task._remainingAtStart-elapsed);
-    if(task.remaining<=settings.transitionWarn&&task.remaining>0&&(task._remainingAtStart-elapsed+1)>settings.transitionWarn){showTransition(`⏰ ${task.name} — ${settings.transitionWarn} seconds left!`);}
-    if(task.remaining<=0){
-      task.remaining=0;task.running=false;task._completionHandled=true;clearInterval(timerIntervals[id]);
-      playSound(task.sound||'chime');
-      // System notification (shows even on lock screen if permission granted)
-      sendNotification('⏰ Timer Done!', task.name + ' is complete!');
-      // Vibrate on mobile devices as backup alert (Android — iOS ignores this)
-      if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
-      // Release wake lock if no more timers running
-      if(!tasks.some(t=>t.running)) releaseWakeLock();
-      awardStar();
-      const card=document.getElementById('card-'+task.id);if(card)card.classList.add('just-completed');
-      const visible=getVisibleTasks();const idx=visible.findIndex(t=>t.id===id);
-      if(idx>=0&&idx<visible.length-1){setTimeout(()=>startTask(visible[idx+1].id),2000);}
-    }
-    render();save();
-  },1000);
+  timerIntervals[id]=setInterval(()=>timerTick(id),1000);
   render();
 }
 function pauseTask(id){const t=tasks.find(t=>t.id===id);if(t){t.running=false;clearInterval(timerIntervals[id]);if(!tasks.some(t=>t.running))releaseWakeLock();render();save();}}
@@ -1246,7 +1266,8 @@ function save(){
 }
 function loadProfileTasks(){
   const allTasks=JSON.parse(localStorage.getItem('tb_allTasks')||'{}');
-  tasks=(allTasks[activeProfileId]||[]).map(t=>({...t,running:false}));
+  // Don't force running:false — let profileTimerState handle active timers
+  tasks=(allTasks[activeProfileId]||[]).map(t=>({...t,running:false,_completionHandled:false}));
 }
 function load(){
   try{
