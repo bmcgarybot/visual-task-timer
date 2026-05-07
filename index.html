@@ -731,11 +731,35 @@
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👦" onclick="pickProfileEmoji(this)">👦</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👧" onclick="pickProfileEmoji(this)">👧</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🧒" onclick="pickProfileEmoji(this)">🧒</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👶" onclick="pickProfileEmoji(this)">👶</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👨" onclick="pickProfileEmoji(this)">👨</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👩" onclick="pickProfileEmoji(this)">👩</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🧑" onclick="pickProfileEmoji(this)">🧑</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👴" onclick="pickProfileEmoji(this)">👴</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="👵" onclick="pickProfileEmoji(this)">👵</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🦸" onclick="pickProfileEmoji(this)">🦸</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🧑‍🎓" onclick="pickProfileEmoji(this)">🧑‍🎓</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🐱" onclick="pickProfileEmoji(this)">🐱</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🐶" onclick="pickProfileEmoji(this)">🐶</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🦊" onclick="pickProfileEmoji(this)">🦊</span>
         <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🐻" onclick="pickProfileEmoji(this)">🐻</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🦁" onclick="pickProfileEmoji(this)">🦁</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🐸" onclick="pickProfileEmoji(this)">🐸</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🦋" onclick="pickProfileEmoji(this)">🦋</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🌟" onclick="pickProfileEmoji(this)">🌟</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🚀" onclick="pickProfileEmoji(this)">🚀</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="🎯" onclick="pickProfileEmoji(this)">🎯</span>
+        <span class="color-swatch" style="font-size:1.5rem;background:var(--surface2);width:42px;height:42px;" data-pemoji="💜" onclick="pickProfileEmoji(this)">💜</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Profile Photo (optional)</label>
+      <div class="photo-upload-area" id="profilePhotoArea" onclick="document.getElementById('profilePhotoInput').click()">
+        📷 Tap to add a photo
+        <img id="profilePhotoPreview" style="display:none;max-width:80px;max-height:80px;border-radius:50%;">
+        <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(event)">
+      </div>
+    </div>
       </div>
     </div>
     <div class="modal-actions">
@@ -1069,7 +1093,10 @@ function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padS
 // ===== PROFILES =====
 function renderProfiles(){
   const bar=document.getElementById('profileBar');
-  bar.innerHTML=profiles.map(p=>`<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${p.emoji} ${p.name}${p.id===activeProfileId?' <span onclick="event.stopPropagation();editProfile(\''+p.id+'\')" style="font-size:0.7rem;opacity:0.7;margin-left:4px;">✏️</span>':''}</button>`).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
+  bar.innerHTML=profiles.map(p=>{
+    const icon=p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;">`:p.emoji;
+    return `<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${icon} ${p.name}${p.id===activeProfileId?' <span onclick="event.stopPropagation();editProfile(\''+p.id+'\')" style="font-size:0.7rem;opacity:0.7;margin-left:4px;">✏️</span>':''}</button>`;
+  }).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
 }
 function switchProfile(id){
   // Save current profile's tasks with their running state + interval references
@@ -1093,27 +1120,39 @@ function switchProfile(id){
   render(); renderRewardBar(); save();
 }
 let editingProfileId = null;
-function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
+function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';profilePhotoData=null;document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profilePhotoPreview').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
 function editProfile(id){
   const p=profiles.find(pr=>pr.id===id);if(!p)return;
   editingProfileId=id;
   selectedProfileEmoji=p.emoji;
+  profilePhotoData=p.photo||null;
   document.getElementById('profileName').value=p.name;
   document.getElementById('profileModalTitle').textContent='Edit Profile';
   document.getElementById('profileDeleteBtn').style.display=profiles.length>1?'inline-block':'none';
-  // Highlight selected emoji
+  const pp=document.getElementById('profilePhotoPreview');
+  if(profilePhotoData){pp.src=profilePhotoData;pp.style.display='block';}else{pp.style.display='none';}
   document.querySelectorAll('#profileModal .color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===p.emoji));
   document.getElementById('profileModal').classList.add('open');lockScroll();
 }
 function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');editingProfileId=null;unlockScroll();if(currentView==='classroom')renderClassroom();}
 function pickProfileEmoji(el){selectedProfileEmoji=el.dataset.pemoji;el.parentElement.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===selectedProfileEmoji));}
+
+let profilePhotoData = null;
+function handleProfilePhotoUpload(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>{
+    profilePhotoData=ev.target.result;
+    const img=document.getElementById('profilePhotoPreview');
+    img.src=profilePhotoData;img.style.display='block';
+  };r.readAsDataURL(f);
+}
 function saveProfile(){
   const name=document.getElementById('profileName').value.trim()||'Profile';
   if(editingProfileId){
     const p=profiles.find(pr=>pr.id===editingProfileId);
-    if(p){p.name=name;p.emoji=selectedProfileEmoji;}
+    if(p){p.name=name;p.emoji=selectedProfileEmoji;if(profilePhotoData)p.photo=profilePhotoData;}
   } else {
-    const p={id:genId(),name,emoji:selectedProfileEmoji,stars:0,streak:0,lastCompleteDate:null,tasks:[]};
+    const p={id:genId(),name,emoji:selectedProfileEmoji,stars:0,streak:0,lastCompleteDate:null,tasks:[],photo:profilePhotoData||null};
     profiles.push(p);
   }
   closeProfileModal();renderProfiles();save();
@@ -1331,7 +1370,8 @@ function renderClassroom() {
   // Profile selector bar at top of classroom
   const profileToggles = profiles.map(p => {
     const isHidden = hidden.includes(p.id);
-    return `<button class="btn-small ${isHidden ? '' : 'btn-info'}" onclick="toggleClassroomProfile('${p.id}')" style="opacity:${isHidden ? '0.4' : '1'};font-size:0.8rem;">${p.emoji} ${p.name}</button>`;
+    const icon = p.photo ? `<img src="${p.photo}" style="width:18px;height:18px;border-radius:50%;object-fit:cover;vertical-align:middle;">` : p.emoji;
+    return `<button class="btn-small ${isHidden ? '' : 'btn-info'}" onclick="toggleClassroomProfile('${p.id}')" style="opacity:${isHidden ? '0.4' : '1'};font-size:0.8rem;">${icon} ${p.name}</button>`;
   }).join('');
 
   const visibleProfiles = profiles.filter(p => !hidden.includes(p.id));
@@ -1373,7 +1413,7 @@ function renderClassroom() {
 
     return `<div class="classroom-column">
       <div class="classroom-header">
-        <span class="student-emoji">${profile.emoji}</span> ${profile.name}
+        ${profile.photo ? `<img src="${profile.photo}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">` : `<span class="student-emoji">${profile.emoji}</span>`} ${profile.name}
         <button class="btn-small" onclick="editProfile('${profile.id}')" style="padding:2px 6px;min-height:auto;font-size:0.7rem;background:transparent;color:var(--text-dim);">✏️</button>
         <span style="font-size:0.75rem;color:var(--text-dim);">⭐${starCount} ${streak > 0 ? '🔥' + streak : ''}</span>
       </div>
