@@ -389,9 +389,40 @@
     .task-grid.layout-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
     .task-container { padding: 30px 40px; }
   }
+
+  /* ===== WHAT'S NEW MODAL ===== */
+  .whats-new-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+    animation: fadeIn 0.3s ease;
+  }
+  .whats-new-box {
+    background: var(--surface); border-radius: 20px; padding: 28px;
+    max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .whats-new-box h2 { font-size: 1.3rem; margin-bottom: 6px; color: var(--accent); }
+  .whats-new-box .wn-version { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px; }
+  .whats-new-box ul { list-style: none; padding: 0; margin: 0 0 20px 0; }
+  .whats-new-box li {
+    padding: 10px 0; border-bottom: 1px solid var(--surface2);
+    font-size: 0.95rem; line-height: 1.5; color: var(--text);
+  }
+  .whats-new-box li:last-child { border-bottom: none; }
+  .whats-new-box li .wn-emoji { margin-right: 8px; }
+  .whats-new-btn {
+    width: 100%; padding: 14px; border: none; border-radius: 12px;
+    background: var(--accent); color: #fff; font-size: 1rem; font-weight: 700;
+    cursor: pointer; font-family: var(--font-main);
+  }
+  .whats-new-btn:active { transform: scale(0.97); }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
+
+<!-- WHAT'S NEW MODAL (injected by JS on version change) -->
+<div id="whatsNewOverlay" class="whats-new-overlay" style="display:none;"></div>
 
 <!-- TRANSITION WARNING BANNER -->
 <div class="transition-warning" id="transitionWarning"></div>
@@ -652,6 +683,33 @@
 </div>
 
 <script>
+// ===== VERSION & WHAT'S NEW =====
+const APP_VERSION = '1.4.0';
+const CHANGELOG = [
+  { emoji: '🔊', text: 'Fixed timer completion sound on iPhones and iPads' },
+  { emoji: '📱', text: 'Cleaner mobile layout with hamburger menu' },
+  { emoji: '🔔', text: 'Optional browser notifications when timers finish' },
+  { emoji: '💡', text: 'Screen stays on while timers are running' },
+];
+
+function checkWhatsNew() {
+  const seen = localStorage.getItem('taskbuddy_seen_version');
+  if (seen === APP_VERSION) return;
+  const overlay = document.getElementById('whatsNewOverlay');
+  overlay.innerHTML = `<div class="whats-new-box">
+    <h2>✨ What's New</h2>
+    <div class="wn-version">Version ${APP_VERSION}</div>
+    <ul>${CHANGELOG.map(c => `<li><span class="wn-emoji">${c.emoji}</span>${c.text}</li>`).join('')}</ul>
+    <button class="whats-new-btn" onclick="dismissWhatsNew()">Got it!</button>
+  </div>`;
+  overlay.style.display = 'flex';
+}
+
+function dismissWhatsNew() {
+  localStorage.setItem('taskbuddy_seen_version', APP_VERSION);
+  document.getElementById('whatsNewOverlay').style.display = 'none';
+}
+
 // ===== STATE =====
 let profiles = [{id:'default',name:'Default',emoji:'🧒',stars:0,streak:0,lastCompleteDate:null}];
 let activeProfileId = 'default';
@@ -1067,6 +1125,7 @@ switchLayout(currentLayout);
 render();
 if(settings.locked)updateLockUI();
 if(currentView==='weekly')renderWeekBar();
+checkWhatsNew();
 </script>
 </body>
 </html>
