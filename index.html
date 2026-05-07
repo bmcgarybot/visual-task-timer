@@ -249,10 +249,12 @@
   .modal-overlay.open { display: flex; }
   body.modal-active { overflow: hidden; position: fixed; width: 100%; }
   .modal {
-    background: var(--surface); border-radius: 20px; padding: 28px;
-    max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
+    background: var(--surface); border-radius: 20px;
+    max-width: 500px; width: 100%; max-height: 90vh;
     border: 2px solid var(--surface2);
+    display: flex; flex-direction: column;
   }
+  .modal-body { padding: 28px; padding-bottom: 0; overflow-y: auto; flex: 1; }
   .modal h2 { font-size: 1.3rem; margin-bottom: 18px; color: var(--accent); }
   .form-group { margin-bottom: 14px; }
   .form-group label { display: block; font-size: 0.85rem; font-weight: 700; color: var(--text-dim); margin-bottom: 5px; }
@@ -271,7 +273,7 @@
   }
   .color-swatch:hover { transform: scale(1.1); }
   .color-swatch.selected { border-color: var(--accent); transform: scale(1.15); box-shadow: 0 0 0 3px var(--accent); }
-  .modal-actions { display: flex; gap: 10px; margin-top: 18px; justify-content: flex-end; }
+  .modal-actions { display: flex; gap: 10px; padding: 14px 28px; justify-content: flex-end; border-top: 1px solid var(--surface2); flex-shrink: 0; }
   .photo-upload-area {
     border: 2px dashed var(--text-dim); border-radius: 12px; padding: 20px;
     text-align: center; cursor: pointer; color: var(--text-dim);
@@ -616,6 +618,7 @@
 <!-- ADD/EDIT TASK MODAL -->
 <div class="modal-overlay" id="taskModal">
   <div class="modal">
+    <div class="modal-body">
     <h2 id="modalTitle">Add New Task</h2>
     <div class="form-group">
       <label>Task Name</label>
@@ -709,6 +712,7 @@
         <button class="btn-small btn-warning" onclick="selectAllDays()">All</button>
       </div>
     </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-icon" onclick="closeModal()">Cancel</button>
       <button class="btn-success" id="modalSaveBtn" onclick="saveTask()">Add Task</button>
@@ -720,6 +724,7 @@
 <!-- PROFILE MODAL -->
 <div class="modal-overlay" id="profileModal">
   <div class="modal">
+    <div class="modal-body">
     <h2 id="profileModalTitle">Add Profile</h2>
     <div class="form-group">
       <label>Name</label>
@@ -760,7 +765,6 @@
         <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(event)">
       </div>
     </div>
-      </div>
     </div>
     <div class="modal-actions">
       <button class="btn-icon" onclick="closeProfileModal()">Cancel</button>
