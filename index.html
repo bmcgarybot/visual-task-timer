@@ -854,10 +854,18 @@ function showTourStep() {
 
   overlay.style.display = 'block';
 
+  // Execute pre-step action (e.g., switch to a tab, close settings)
+  if (step.action) {
+    step.action();
+  }
+
+  // Brief delay to let DOM update after action
+  setTimeout(() => {
   // Spotlight the target element
   if (step.target) {
     const el = document.querySelector(step.target);
     if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
       const rect = el.getBoundingClientRect();
       const pad = 6;
       spotlight.style.display = 'block';
@@ -917,6 +925,7 @@ function showTourStep() {
     // No target — center vertically too
     tooltip.style.top = Math.max(10, (window.innerHeight - ttRect.height) / 2) + 'px';
   });
+  }, step.action ? 150 : 0);
 }
 
 function nextTourStep() { tourIndex++; showTourStep(); }
@@ -930,6 +939,23 @@ function endTour() {
 }
 
 function startOnboarding() { startTour(ONBOARDING_STEPS); }
+
+// ---- Classroom Tour (triggered when classroom is first enabled) ----
+const CLASSROOM_TOUR_STEPS = [
+  { title: '🏫 Classroom View Activated!', body: 'This mode lets you see ALL students at once with their own timers. Let\'s walk through it — we\'ll actually go there and show you.', target: null },
+  { title: 'Switch to Classroom', body: 'Tap the 🏫 Classroom tab to enter Classroom View. Let\'s go there now!', target: '#viewTabs',
+    action: () => { closeSettings(); currentView = 'classroom'; render(); }
+  },
+  { title: 'Your Student Columns', body: 'Each student gets their own column with their tasks, timers, stars, and streak. Everything runs independently — start one student\'s timer without affecting others.', target: '#classroomContainer' },
+  { title: 'Show / Hide Students', body: 'This bar lets you toggle which students appear. Tap a name to hide them temporarily — their data stays safe. Useful when only some students are present.', target: '#classroomContainer',
+    action: () => { const bar = document.querySelector('#classroomContainer > div > div:first-child'); if(bar) bar.scrollIntoView({behavior:'smooth',block:'start'}); }
+  },
+  { title: '＋ Add Student', body: 'Tap "＋ Add Student" here to create a new profile right from the classroom. Pick a name, emoji, or upload their photo.', target: '#classroomContainer' },
+  { title: 'Task Controls', body: 'Each task card has ▶ play, ⏸ pause, and ↺ reset. At the bottom of each column, you can start, pause, or reset ALL tasks for that student at once.', target: '#classroomContainer' },
+  { title: '✏️ Edit Tasks', body: 'See the ✏️ on each task? Tap it to change the timer, name, color, or sound for that student\'s task. You can also add new tasks with the "＋ Add Task" button at the bottom of each column.', target: '#classroomContainer' },
+  { title: '✏️ Rename Students', body: 'Tap the ✏️ next to a student\'s name in the column header to rename them, change their emoji, or update their photo.', target: '#classroomContainer' },
+  { title: 'Switch Back Anytime', body: 'Tap 📋 Daily or 📅 Weekly to go back to single-student view. Classroom is always here when you need it. Enjoy!', target: '#viewTabs' },
+];
 
 function checkFirstVisit() {
   if (!localStorage.getItem('taskbuddy_onboarded')) {
@@ -1608,6 +1634,10 @@ function toggleClassroomMode(on){
   settings.classroomForced=on;
   document.querySelectorAll('.classroom-view-tab').forEach(el=>el.style.display=on?'block':'');
   save();
+  if(on && !localStorage.getItem('taskbuddy_classroom_toured')){
+    localStorage.setItem('taskbuddy_classroom_toured','1');
+    startTour(CLASSROOM_TOUR_STEPS);
+  }
 }
 
 // ===== KID LOCK =====
