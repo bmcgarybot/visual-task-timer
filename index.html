@@ -53,18 +53,18 @@
 
   /* ===== TOP BAR ===== */
   .top-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px; background: var(--surface);
+    display: flex; align-items: center; flex-wrap: wrap;
+    padding: 10px 12px; background: var(--surface);
     border-bottom: 2px solid var(--surface2); gap: 8px;
   }
   .top-bar h1 {
-    font-size: 1.4rem; font-weight: 800;
+    font-size: 1.3rem; font-weight: 800;
     background: linear-gradient(135deg, #e94560, #f0c040, #4ecca3, #7b68ee);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    white-space: nowrap;
+    white-space: nowrap; flex-shrink: 0;
   }
-  .top-bar-controls { display: flex; gap: 6px; align-items: center; }
-  .top-bar-right { display: flex; gap: 4px; align-items: center; }
+  .top-bar-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; flex: 1; justify-content: flex-end; }
+  .top-bar-right { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
 
   /* ===== BUTTONS ===== */
   button {
@@ -265,9 +265,9 @@
 
   /* ===== GLOBAL CONTROLS ===== */
   .global-controls {
-    display: flex; gap: 10px; padding: 14px 20px;
+    display: flex; flex-direction: column; gap: 8px; padding: 12px 16px;
     background: var(--surface); border-top: 2px solid var(--surface2);
-    position: sticky; bottom: 0; justify-content: center; flex-wrap: wrap;
+    position: sticky; bottom: 0;
   }
 
   /* ===== SETTINGS PANEL ===== */
@@ -346,9 +346,10 @@
 
   /* ===== RESPONSIVE — MOBILE ===== */
   @media (max-width: 600px) {
-    .top-bar { padding: 8px 10px; gap: 6px; }
-    .top-bar h1 { font-size: 1.1rem; }
-    .top-bar-controls { gap: 4px; }
+    .top-bar { padding: 8px 10px; gap: 6px; flex-wrap: wrap; }
+    .top-bar h1 { font-size: 1.1rem; width: 100%; text-align: center; }
+    .top-bar-controls { width: 100%; justify-content: center; gap: 4px; flex-wrap: wrap; }
+    .top-bar-right { justify-content: center; }
     .btn-primary.add-btn { padding: 8px 12px; font-size: 0.85rem; }
     .btn-icon { padding: 6px 8px; font-size: 1rem; min-height: 40px; min-width: 40px; }
     .top-bar-right .btn-icon { padding: 4px 7px; min-height: 36px; min-width: 36px; font-size: 0.95rem; }
@@ -361,8 +362,8 @@
     .task-time-display { font-size: 2.5rem; }
     button { min-height: 44px; }
     .btn-small { min-height: 44px; padding: 10px 14px; }
-    .global-controls { padding: 10px 12px; }
-    .global-controls button { flex: 1; min-width: 0; font-size: 0.85rem; padding: 10px 8px; }
+    .global-controls { padding: 8px 10px; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .global-controls button { font-size: 0.8rem; padding: 10px 10px; min-width: 0; white-space: nowrap; }
     .modal { border-radius: 16px 16px 0 0; max-height: 85vh; }
     .modal-overlay { align-items: flex-end; padding: 0; }
     .modal-actions button { flex: 1; min-height: 44px; }
@@ -400,9 +401,11 @@
     position: fixed; z-index: 10000;
     background: var(--surface); border: 2px solid var(--accent);
     border-radius: 16px; padding: 20px 22px;
-    max-width: 320px; width: calc(100vw - 32px);
+    max-width: 320px; width: calc(100vw - 40px);
     box-shadow: 0 12px 40px rgba(0,0,0,0.5);
     animation: tourPop 0.3s ease;
+    /* Always center on mobile for reliability */
+    left: 50% !important; transform: translateX(-50%);
   }
   @keyframes tourPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
   .tour-tooltip h3 { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; }
@@ -478,14 +481,18 @@
 
 <!-- GLOBAL CONTROLS -->
 <div class="global-controls" id="globalControls">
-  <button class="btn-success" onclick="startAll()">▶ Start All</button>
-  <button class="btn-warning" onclick="pauseAll()">⏸ Pause</button>
-  <button class="btn-info" onclick="resetAll()">↺ Reset</button>
-  <button class="btn-icon" onclick="exportSchedule()" title="Save your setup to a file">💾 Save</button>
-  <button class="btn-icon" onclick="document.getElementById('importInput').click()" title="Load a saved setup file">📂 Open</button>
-  <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSchedule(event)">
-  <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;"><button class="btn-warning" style="background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;font-size:0.95rem;padding:10px 18px;">💬 Send Feedback</button></a>
-  <span class="save-indicator" id="saveIndicator">💾</span>
+  <div style="display:flex;gap:8px;width:100%;justify-content:center;">
+    <button class="btn-success" onclick="startAll()" style="flex:1;">▶ Start All</button>
+    <button class="btn-warning" onclick="pauseAll()" style="flex:1;">⏸ Pause</button>
+    <button class="btn-info" onclick="resetAll()" style="flex:1;">↺ Reset</button>
+  </div>
+  <div style="display:flex;gap:8px;width:100%;justify-content:center;align-items:center;">
+    <button class="btn-icon" onclick="exportSchedule()" title="Save your setup to a file" style="flex:1;">💾 Save</button>
+    <button class="btn-icon" onclick="document.getElementById('importInput').click()" title="Load a saved setup file" style="flex:1;">📂 Open</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSchedule(event)">
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;flex:1;"><button class="btn-warning" style="background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;font-size:0.85rem;padding:10px 12px;width:100%;">💬 Feedback</button></a>
+    <span class="save-indicator" id="saveIndicator">💾</span>
+  </div>
 </div>
 
 <!-- SETTINGS PANEL -->
@@ -766,36 +773,32 @@ function showTourStep() {
   `;
   tooltip.style.display = 'block';
 
-  // Position tooltip below or above target
+  // Position tooltip — center horizontally, place below or above spotlight
   requestAnimationFrame(() => {
     const ttRect = tooltip.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 600;
+
     if (step.target) {
       const el = document.querySelector(step.target);
       if (el) {
         const rect = el.getBoundingClientRect();
-        const below = rect.bottom + 12;
-        const above = rect.top - ttRect.height - 12;
-        // If below fits, use below; else use above; else center
+        const below = rect.bottom + 16;
+        const above = rect.top - ttRect.height - 16;
+
         if (below + ttRect.height < window.innerHeight) {
           tooltip.style.top = below + 'px';
-        } else if (above > 0) {
+        } else if (above > 10) {
           tooltip.style.top = above + 'px';
         } else {
-          tooltip.style.top = '50%';
-          tooltip.style.transform = 'translateY(-50%)';
+          // Neither fits — place in center
+          tooltip.style.top = Math.max(10, (window.innerHeight - ttRect.height) / 2) + 'px';
         }
-        // Center horizontally near target
-        let left = rect.left + rect.width / 2 - ttRect.width / 2;
-        left = Math.max(16, Math.min(left, window.innerWidth - ttRect.width - 16));
-        tooltip.style.left = left + 'px';
-        tooltip.style.transform = tooltip.style.transform || '';
+        // Horizontal centering handled by CSS (left:50% + translateX)
         return;
       }
     }
-    // No target — center on screen
-    tooltip.style.top = '50%';
-    tooltip.style.left = '50%';
-    tooltip.style.transform = 'translate(-50%, -50%)';
+    // No target — center vertically too
+    tooltip.style.top = Math.max(10, (window.innerHeight - ttRect.height) / 2) + 'px';
   });
 }
 
