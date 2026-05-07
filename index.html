@@ -134,13 +134,16 @@
   }
   .profile-slider-track::-webkit-scrollbar { display: none; }
   .profile-slider-arrow {
-    display: none; align-items: center; justify-content: center;
-    width: 32px; min-width: 32px; height: 100%; background: var(--surface);
-    color: var(--text-dim); font-size: 1.2rem; cursor: pointer; border: none;
-    font-family: var(--font-main); z-index: 2; transition: color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    width: 40px; min-width: 40px; height: 100%; 
+    background: var(--accent); color: #fff; font-size: 1.5rem; font-weight: 900;
+    cursor: pointer; border: none; font-family: var(--font-main); z-index: 2;
+    transition: opacity 0.2s, background 0.2s;
+    opacity: 1;
   }
-  .profile-slider-arrow:hover { color: var(--accent); }
-  .profile-slider-arrow.visible { display: flex; }
+  .profile-slider-arrow:hover { background: var(--info); }
+  .profile-slider-arrow:active { background: var(--info); transform: scale(0.95); }
+  .profile-slider-arrow.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
   .profile-chip {
     padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
     background: var(--surface2); color: var(--text-dim); white-space: nowrap; cursor: pointer;
@@ -439,6 +442,7 @@
     .modal-actions button { flex: 1; min-height: 44px; }
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 8px 6px; gap: 6px; }
+    .profile-slider-arrow { width: 36px; min-width: 36px; font-size: 1.3rem; }
     .classroom-profile-card { min-width: 120px; }
     .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
@@ -457,6 +461,7 @@
     .view-tab { padding: 4px 8px !important; font-size: 0.75rem !important; }
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 4px 4px; gap: 4px; }
+    .profile-slider-arrow { width: 32px; min-width: 32px; font-size: 1.2rem; }
     .profile-chip { font-size: 0.75rem; padding: 4px 10px; }
     .classroom-profile-card { min-width: 100px; padding: 8px 10px; }
     .classroom-profile-card .cp-emoji { font-size: 1.5rem; }
@@ -1205,9 +1210,8 @@ function updateProfileArrows(){
   if(!left||!right)return;
   const canScrollLeft=track.scrollLeft>4;
   const canScrollRight=track.scrollLeft<track.scrollWidth-track.clientWidth-4;
-  const needArrows=track.scrollWidth>track.clientWidth+8;
-  left.classList.toggle('visible',needArrows&&canScrollLeft);
-  right.classList.toggle('visible',needArrows&&canScrollRight);
+  left.classList.toggle('disabled',!canScrollLeft);
+  right.classList.toggle('disabled',!canScrollRight);
 }
 function switchProfile(id){
   // Save current profile's tasks with their running state + interval references
