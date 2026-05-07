@@ -403,6 +403,24 @@
     .top-bar h1 { font-size: 1.1rem; }
     .task-time-display { font-size: 2.1rem; }
   }
+  /* Landscape on phones — compact everything */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .top-bar { padding: 4px 10px; gap: 4px; }
+    .top-bar h1 { font-size: 1rem; width: auto; }
+    .top-bar-controls { width: auto; }
+    button { min-height: 32px !important; padding: 4px 10px !important; font-size: 0.8rem !important; }
+    .btn-icon { min-height: 32px !important; min-width: 32px !important; padding: 3px 6px !important; font-size: 0.9rem !important; }
+    .view-tab { padding: 4px 8px !important; font-size: 0.75rem !important; }
+    .profile-bar { padding: 4px 8px; }
+    .profile-chip { padding: 3px 10px; font-size: 0.78rem; }
+    .reward-bar { padding: 4px 10px; font-size: 0.75rem; }
+    .global-controls { padding: 4px 8px; gap: 4px; }
+    .global-controls > div { gap: 4px !important; }
+    .task-container { padding: 6px; }
+    .task-card { min-height: 120px; }
+    .task-time-display { font-size: 1.8rem; }
+    .task-content { padding: 10px; gap: 6px; }
+  }
   @media (min-width: 601px) and (max-width: 1024px) {
     .task-grid.layout-grid { grid-template-columns: repeat(2, 1fr); }
     button { min-height: 48px; }
@@ -1302,9 +1320,17 @@ function switchLayout(l){currentLayout=l;const g=document.getElementById('taskGr
 function renderClassroom() {
   const container = document.getElementById('classroomContainer');
   const allTasks = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+  const hidden = settings.classroomHidden || [];
 
-  container.innerHTML = profiles.map(profile => {
-    // Get tasks for this profile — check live state first, then storage
+  // Profile selector bar at top of classroom
+  const profileToggles = profiles.map(p => {
+    const isHidden = hidden.includes(p.id);
+    return `<button class="btn-small ${isHidden ? '' : 'btn-info'}" onclick="toggleClassroomProfile('${p.id}')" style="opacity:${isHidden ? '0.4' : '1'};font-size:0.8rem;">${p.emoji} ${p.name}</button>`;
+  }).join('');
+
+  const visibleProfiles = profiles.filter(p => !hidden.includes(p.id));
+
+  const columnsHtml = visibleProfiles.map(profile => {
     let pTasks;
     if (profile.id === activeProfileId) {
       pTasks = tasks;
@@ -1320,7 +1346,10 @@ function renderClassroom() {
       const isDone = task.remaining <= 0 && task.totalSeconds > 0;
       const cls = ['classroom-task', task.running ? 'active' : '', isDone ? 'completed' : ''].filter(Boolean).join(' ');
       return `<div class="${cls}">
-        <div class="ct-name">${task.emoji} ${task.name}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="ct-name">${task.emoji} ${task.name}</div>
+          <button class="btn-small" onclick="classroomEditTask('${profile.id}','${task.id}')" style="padding:2px 6px;min-height:auto;font-size:0.7rem;background:var(--surface2);">✏️</button>
+        </div>
         <div class="ct-time" style="color:${isDone ? 'var(--success)' : task.running ? 'var(--accent)' : 'var(--text-dim)'}">
           ${isDone ? '✓ Done!' : formatTime(task.remaining)}
         </div>
@@ -1343,6 +1372,7 @@ function renderClassroom() {
       </div>
       <div class="classroom-tasks">
         ${tasksHtml || '<div style="text-align:center;color:var(--text-dim);padding:20px;">No tasks</div>'}
+        <button class="btn-small btn-primary" onclick="classroomAddTask('${profile.id}')" style="width:100%;font-size:0.85rem;margin-top:4px;">＋ Add Task</button>
       </div>
       <div style="padding:8px;text-align:center;border-top:1px solid var(--surface2);">
         <button class="btn-small btn-success" onclick="classroomStartAll('${profile.id}')" style="font-size:0.8rem;">▶ All</button>
@@ -1351,6 +1381,50 @@ function renderClassroom() {
       </div>
     </div>`;
   }).join('');
+
+  container.innerHTML = `<div style="width:100%;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px 0;align-items:center;">
+      <span style="font-size:0.8rem;color:var(--text-dim);font-weight:700;">Show:</span>${profileToggles}
+    </div>
+    <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;">${columnsHtml}</div>
+  </div>`;
+}
+
+function toggleClassroomProfile(profileId) {
+  if (!settings.classroomHidden) settings.classroomHidden = [];
+  const idx = settings.classroomHidden.indexOf(profileId);
+  if (idx >= 0) settings.classroomHidden.splice(idx, 1);
+  else settings.classroomHidden.push(profileId);
+  save(); renderClassroom();
+}
+
+function classroomAddTask(profileId) {
+  // Switch to that profile and open the add modal
+  if (profileId !== activeProfileId) {
+    profileTimerState[activeProfileId] = { tasks: tasks.map(t => ({...t})), intervals: {...timerIntervals} };
+    activeProfileId = profileId;
+    if (profileTimerState[profileId]) {
+      tasks = profileTimerState[profileId].tasks;
+    } else {
+      const allTasks = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+      tasks = (allTasks[profileId] || []).map(t => ({...t, running: false}));
+    }
+  }
+  openAddModal();
+}
+
+function classroomEditTask(profileId, taskId) {
+  if (profileId !== activeProfileId) {
+    profileTimerState[activeProfileId] = { tasks: tasks.map(t => ({...t})), intervals: {...timerIntervals} };
+    activeProfileId = profileId;
+    if (profileTimerState[profileId]) {
+      tasks = profileTimerState[profileId].tasks;
+    } else {
+      const allTasks = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+      tasks = (allTasks[profileId] || []).map(t => ({...t, running: false}));
+    }
+  }
+  editTask(taskId);
 }
 
 function classroomAction(profileId, taskId, action) {
