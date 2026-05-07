@@ -711,6 +711,7 @@
     <div class="modal-actions">
       <button class="btn-icon" onclick="closeProfileModal()">Cancel</button>
       <button class="btn-success" onclick="saveProfile()">Save</button>
+      <button class="btn-primary" id="profileDeleteBtn" style="display:none;background:#c0392b;" onclick="deleteProfile()">🗑</button>
     </div>
   </div>
 </div>
@@ -1034,7 +1035,7 @@ function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padS
 // ===== PROFILES =====
 function renderProfiles(){
   const bar=document.getElementById('profileBar');
-  bar.innerHTML=profiles.map(p=>`<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${p.emoji} ${p.name}</button>`).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
+  bar.innerHTML=profiles.map(p=>`<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${p.emoji} ${p.name}${p.id===activeProfileId?' <span onclick="event.stopPropagation();editProfile(\''+p.id+'\')" style="font-size:0.7rem;opacity:0.7;margin-left:4px;">✏️</span>':''}</button>`).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
 }
 function switchProfile(id){
   // Save current profile's tasks with their running state + interval references
@@ -1057,13 +1058,37 @@ function switchProfile(id){
   }
   render(); renderRewardBar(); save();
 }
-function openProfileModal(){selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModal').classList.add('open');}
-function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');}
+let editingProfileId = null;
+function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profileModal').classList.add('open');}
+function editProfile(id){
+  const p=profiles.find(pr=>pr.id===id);if(!p)return;
+  editingProfileId=id;
+  selectedProfileEmoji=p.emoji;
+  document.getElementById('profileName').value=p.name;
+  document.getElementById('profileModalTitle').textContent='Edit Profile';
+  document.getElementById('profileDeleteBtn').style.display=profiles.length>1?'inline-block':'none';
+  // Highlight selected emoji
+  document.querySelectorAll('#profileModal .color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===p.emoji));
+  document.getElementById('profileModal').classList.add('open');
+}
+function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');editingProfileId=null;}
 function pickProfileEmoji(el){selectedProfileEmoji=el.dataset.pemoji;el.parentElement.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===selectedProfileEmoji));}
 function saveProfile(){
   const name=document.getElementById('profileName').value.trim()||'Profile';
-  const p={id:genId(),name,emoji:selectedProfileEmoji,stars:0,streak:0,lastCompleteDate:null,tasks:[]};
-  profiles.push(p);closeProfileModal();renderProfiles();save();
+  if(editingProfileId){
+    const p=profiles.find(pr=>pr.id===editingProfileId);
+    if(p){p.name=name;p.emoji=selectedProfileEmoji;}
+  } else {
+    const p={id:genId(),name,emoji:selectedProfileEmoji,stars:0,streak:0,lastCompleteDate:null,tasks:[]};
+    profiles.push(p);
+  }
+  closeProfileModal();renderProfiles();save();
+}
+function deleteProfile(){
+  if(!editingProfileId||profiles.length<=1)return;
+  profiles=profiles.filter(p=>p.id!==editingProfileId);
+  if(activeProfileId===editingProfileId){activeProfileId=profiles[0].id;loadProfileTasks();}
+  closeProfileModal();renderProfiles();renderRewardBar();render();save();
 }
 
 // ===== REWARDS =====
