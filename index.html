@@ -159,7 +159,7 @@
     display: flex; align-items: center; gap: 0; padding: 0 0 10px 0;
   }
   .classroom-profile-slider .cps-track {
-    display: flex; gap: 8px; overflow-x: auto; padding: 4px 8px;
+    display: flex; gap: 10px; overflow-x: auto; padding: 4px 8px;
     scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
     scrollbar-width: none; flex: 1;
   }
@@ -175,8 +175,8 @@
   .classroom-profile-slider .cps-arrow:active { transform: scale(0.95); }
   .classroom-profile-slider .cps-arrow.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
   .classroom-profile-card {
-    flex: 0 0 auto; scroll-snap-align: start;
-    min-width: 140px; padding: 10px 14px; border-radius: 14px;
+    flex: 0 0 calc(33% - 10px); scroll-snap-align: start;
+    min-width: 180px; padding: 14px 18px; border-radius: 14px;
     background: var(--surface2); text-align: center; cursor: pointer;
     border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s;
   }
@@ -456,7 +456,7 @@
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 8px 6px; gap: 6px; }
     .profile-slider-arrow { width: 36px; min-width: 36px; font-size: 1.3rem; }
-    .classroom-profile-card { min-width: 120px; }
+    .classroom-profile-card { flex: 0 0 calc(50% - 8px); min-width: 120px; }
     .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
   }
@@ -476,7 +476,7 @@
     .profile-slider-track { padding: 4px 4px; gap: 4px; }
     .profile-slider-arrow { width: 32px; min-width: 32px; font-size: 1.2rem; }
     .profile-chip { font-size: 0.75rem; padding: 4px 10px; }
-    .classroom-profile-card { min-width: 100px; padding: 8px 10px; }
+    .classroom-profile-card { flex: 0 0 calc(60% - 8px); min-width: 100px; padding: 8px 10px; }
     .classroom-profile-card .cp-emoji { font-size: 1.5rem; }
     .profile-chip { padding: 3px 10px; font-size: 0.78rem; }
     .reward-bar { padding: 4px 10px; font-size: 0.75rem; }
