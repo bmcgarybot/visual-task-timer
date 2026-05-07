@@ -659,6 +659,37 @@ const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
 function activeProfile() { return profiles.find(p=>p.id===activeProfileId)||profiles[0]; }
 
+// ===== WAKE LOCK (keeps screen on while timers run — critical for iOS) =====
+let wakeLock = null;
+async function requestWakeLock() {
+  if(!('wakeLock' in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  } catch(e) { /* user denied or not supported */ }
+}
+function releaseWakeLock() {
+  if(wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+// Re-acquire wake lock when page becomes visible again (iOS releases it on tab switch)
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && tasks.some(t => t.running)) requestWakeLock();
+});
+
+// ===== NOTIFICATIONS =====
+let notifPermission = Notification ? Notification.permission : 'denied';
+function requestNotifPermission() {
+  if(!('Notification' in window)) return;
+  if(Notification.permission === 'default') {
+    Notification.requestPermission().then(p => { notifPermission = p; });
+  }
+}
+function sendNotification(title, body) {
+  if(notifPermission === 'granted') {
+    try { new Notification(title, { body, icon: '⏰', tag: 'timer-done', requireInteraction: true }); } catch(e) {}
+  }
+}
+
 // ===== AUDIO =====
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
@@ -781,6 +812,10 @@ function render(){
 function startTask(id){
   const task=tasks.find(t=>t.id===id);if(!task||task.remaining<=0)return;
   task.running=true;
+  // Request notification permission on first timer start (needs user gesture)
+  requestNotifPermission();
+  // Keep screen on while timer runs (iOS will suspend JS otherwise)
+  requestWakeLock();
   /* Store the real clock time when this timer started (or resumed).
      This lets us calculate correct remaining time even after the browser
      was backgrounded/sleeping. */
@@ -795,8 +830,12 @@ function startTask(id){
     if(task.remaining<=0){
       task.remaining=0;task.running=false;clearInterval(timerIntervals[id]);
       playSound(task.sound||'chime');
-      // Vibrate on mobile devices as backup alert (iOS ignores this but Android works)
+      // System notification (shows even on lock screen if permission granted)
+      sendNotification('⏰ Timer Done!', task.name + ' is complete!');
+      // Vibrate on mobile devices as backup alert (Android — iOS ignores this)
       if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+      // Release wake lock if no more timers running
+      if(!tasks.some(t=>t.running)) releaseWakeLock();
       awardStar();
       const card=document.getElementById('card-'+task.id);if(card)card.classList.add('just-completed');
       const visible=getVisibleTasks();const idx=visible.findIndex(t=>t.id===id);
@@ -806,11 +845,11 @@ function startTask(id){
   },1000);
   render();
 }
-function pauseTask(id){const t=tasks.find(t=>t.id===id);if(t){t.running=false;clearInterval(timerIntervals[id]);render();save();}}
-function resetTask(id){const t=tasks.find(t=>t.id===id);if(t){t.running=false;t.remaining=t.totalSeconds;clearInterval(timerIntervals[id]);render();save();}}
+function pauseTask(id){const t=tasks.find(t=>t.id===id);if(t){t.running=false;clearInterval(timerIntervals[id]);if(!tasks.some(t=>t.running))releaseWakeLock();render();save();}}
+function resetTask(id){const t=tasks.find(t=>t.id===id);if(t){t.running=false;t.remaining=t.totalSeconds;clearInterval(timerIntervals[id]);if(!tasks.some(t=>t.running))releaseWakeLock();render();save();}}
 function startAll(){const v=getVisibleTasks(),f=v.find(t=>t.remaining>0);if(f)startTask(f.id);}
-function pauseAll(){tasks.forEach(t=>{t.running=false;clearInterval(timerIntervals[t.id]);});render();save();}
-function resetAll(){tasks.forEach(t=>{t.running=false;t.remaining=t.totalSeconds;clearInterval(timerIntervals[t.id]);});render();save();}
+function pauseAll(){tasks.forEach(t=>{t.running=false;clearInterval(timerIntervals[t.id]);});releaseWakeLock();render();save();}
+function resetAll(){tasks.forEach(t=>{t.running=false;t.remaining=t.totalSeconds;clearInterval(timerIntervals[t.id]);});releaseWakeLock();render();save();}
 
 function showTransition(msg){const el=document.getElementById('transitionWarning');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3000);}
 
