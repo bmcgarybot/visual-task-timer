@@ -174,8 +174,8 @@
   .classroom-profile-slider .cps-arrow:hover { background: var(--info); }
   .classroom-profile-slider .cps-arrow:active { transform: scale(0.95); }
   .classroom-profile-card {
-    flex: 0 0 calc(33% - 10px); scroll-snap-align: start;
-    min-width: 180px; padding: 14px 18px; border-radius: 14px;
+    flex: 0 0 auto; scroll-snap-align: start;
+    min-width: 100px; padding: 10px 14px; border-radius: 14px;
     background: var(--surface2); text-align: center; cursor: pointer;
     border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s;
   }
@@ -185,6 +185,26 @@
   .classroom-profile-card .cp-name { font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
   .classroom-profile-card .cp-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
   .classroom-profile-card img.cp-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
+
+  /* Classroom columns slider */
+  .classroom-columns-slider {
+    display: flex; align-items: stretch; gap: 0; position: relative;
+  }
+  .classroom-columns-slider .cols-track {
+    display: flex; gap: 16px; overflow-x: auto; padding: 0 4px 8px 4px;
+    scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; flex: 1;
+  }
+  .classroom-columns-slider .cols-track::-webkit-scrollbar { display: none; }
+  .classroom-columns-slider .cols-arrow {
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; min-width: 44px;
+    background: var(--accent); color: #fff; font-size: 1.8rem; font-weight: 900;
+    cursor: pointer; border: none; border-radius: 12px; margin: 0 4px;
+    transition: background 0.2s; align-self: stretch;
+  }
+  .classroom-columns-slider .cols-arrow:hover { background: var(--info); }
+  .classroom-columns-slider .cols-arrow:active { transform: scale(0.96); }
 
   /* ===== REWARD/STREAK BAR ===== */
   .reward-bar {
@@ -455,7 +475,8 @@
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 8px 6px; gap: 6px; }
     .profile-slider-arrow { width: 36px; min-width: 36px; font-size: 1.3rem; }
-    .classroom-profile-card { flex: 0 0 calc(50% - 8px); min-width: 120px; }
+    .classroom-profile-card { flex: 0 0 auto; min-width: 100px; }
+    .classroom-columns-slider .cols-arrow { width: 36px; min-width: 36px; font-size: 1.4rem; margin: 0 2px; }
     .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
   }
@@ -475,8 +496,9 @@
     .profile-slider-track { padding: 4px 4px; gap: 4px; }
     .profile-slider-arrow { width: 32px; min-width: 32px; font-size: 1.2rem; }
     .profile-chip { font-size: 0.75rem; padding: 4px 10px; }
-    .classroom-profile-card { flex: 0 0 calc(60% - 8px); min-width: 100px; padding: 8px 10px; }
+    .classroom-profile-card { flex: 0 0 auto; min-width: 80px; padding: 8px 10px; }
     .classroom-profile-card .cp-emoji { font-size: 1.5rem; }
+    .classroom-columns-slider .cols-arrow { width: 30px; min-width: 30px; font-size: 1.2rem; margin: 0 1px; }
     .profile-chip { padding: 3px 10px; font-size: 0.78rem; }
     .reward-bar { padding: 4px 10px; font-size: 0.75rem; }
     .global-controls { padding: 4px 8px; gap: 4px; }
@@ -1219,6 +1241,11 @@ function scrollClassroomProfiles(dir){
   if(!track)return;
   track.scrollBy({left:dir*200,behavior:'smooth'});
 }
+function scrollClassroomColumns(dir){
+  const track=document.getElementById('classroomColsTrack');
+  if(!track)return;
+  track.scrollBy({left:dir*280,behavior:'smooth'});
+}
 function updateProfileArrows(){
   const track=document.getElementById('profileTrack');
   if(!track)return;
@@ -1595,7 +1622,11 @@ function renderClassroom() {
       <div class="cps-track" id="cpsTrack">${profileCards}</div>
       <button class="cps-arrow" onclick="scrollClassroomProfiles(1)" id="cpsArrowRight">›</button>
     </div>
-    <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;">${columnsHtml}</div>
+    <div class="classroom-columns-slider">
+      <button class="cols-arrow" onclick="scrollClassroomColumns(-1)">‹</button>
+      <div class="cols-track" id="classroomColsTrack">${columnsHtml}</div>
+      <button class="cols-arrow" onclick="scrollClassroomColumns(1)">›</button>
+    </div>
   </div>`;
 }
 
