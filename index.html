@@ -247,6 +247,7 @@
     align-items: center; justify-content: center; padding: 20px;
   }
   .modal-overlay.open { display: flex; }
+  body.modal-active { overflow: hidden; position: fixed; width: 100%; }
   .modal {
     background: var(--surface); border-radius: 20px; padding: 28px;
     max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto;
@@ -1058,6 +1059,9 @@ function playSound(type) {
 }
 
 // ===== HELPERS =====
+let savedScrollY = 0;
+function lockScroll() { savedScrollY = window.scrollY; document.body.classList.add('modal-active'); document.body.style.top = -savedScrollY + 'px'; }
+function unlockScroll() { document.body.classList.remove('modal-active'); document.body.style.top = ''; window.scrollTo(0, savedScrollY); }
 function genId(){return'_'+Math.random().toString(36).substr(2,9);}
 function getVisibleTasks(){if(currentView==='weekly')return tasks.filter(t=>t.days&&t.days.includes(currentDay));return tasks;}
 function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
@@ -1089,7 +1093,7 @@ function switchProfile(id){
   render(); renderRewardBar(); save();
 }
 let editingProfileId = null;
-function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profileModal').classList.add('open');}
+function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
 function editProfile(id){
   const p=profiles.find(pr=>pr.id===id);if(!p)return;
   editingProfileId=id;
@@ -1099,9 +1103,9 @@ function editProfile(id){
   document.getElementById('profileDeleteBtn').style.display=profiles.length>1?'inline-block':'none';
   // Highlight selected emoji
   document.querySelectorAll('#profileModal .color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===p.emoji));
-  document.getElementById('profileModal').classList.add('open');
+  document.getElementById('profileModal').classList.add('open');lockScroll();
 }
-function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');editingProfileId=null;}
+function closeProfileModal(){document.getElementById('profileModal').classList.remove('open');editingProfileId=null;unlockScroll();if(currentView==='classroom')renderClassroom();}
 function pickProfileEmoji(el){selectedProfileEmoji=el.dataset.pemoji;el.parentElement.querySelectorAll('.color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===selectedProfileEmoji));}
 function saveProfile(){
   const name=document.getElementById('profileName').value.trim()||'Profile';
@@ -1258,6 +1262,7 @@ function openAddModal(){
   document.getElementById('daySelectGroup').style.display=currentView==='weekly'?'block':'none';
   document.getElementById('taskModal').classList.add('open');
   document.getElementById('taskName').focus();
+  lockScroll();
 }
 function editTask(id){
   if(settings.locked)return;
@@ -1277,8 +1282,9 @@ function editTask(id){
   updateColorUI();updateEmojiUI();updateDayUI();
   document.getElementById('daySelectGroup').style.display=currentView==='weekly'?'block':'none';
   document.getElementById('taskModal').classList.add('open');
+  lockScroll();
 }
-function closeModal(){document.getElementById('taskModal').classList.remove('open');editingId=null;}
+function closeModal(){document.getElementById('taskModal').classList.remove('open');editingId=null;unlockScroll();if(currentView==='classroom')renderClassroom();}
 function saveTask(){
   const name=document.getElementById('taskName').value.trim()||'Task';
   const mins=parseInt(document.getElementById('taskMinutes').value)||0;
@@ -1368,6 +1374,7 @@ function renderClassroom() {
     return `<div class="classroom-column">
       <div class="classroom-header">
         <span class="student-emoji">${profile.emoji}</span> ${profile.name}
+        <button class="btn-small" onclick="editProfile('${profile.id}')" style="padding:2px 6px;min-height:auto;font-size:0.7rem;background:transparent;color:var(--text-dim);">✏️</button>
         <span style="font-size:0.75rem;color:var(--text-dim);">⭐${starCount} ${streak > 0 ? '🔥' + streak : ''}</span>
       </div>
       <div class="classroom-tasks">
@@ -1385,6 +1392,7 @@ function renderClassroom() {
   container.innerHTML = `<div style="width:100%;">
     <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px 0;align-items:center;">
       <span style="font-size:0.8rem;color:var(--text-dim);font-weight:700;">Show:</span>${profileToggles}
+      <button class="btn-small btn-primary" onclick="openProfileModal()" style="font-size:0.8rem;">＋ Add Student</button>
     </div>
     <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;">${columnsHtml}</div>
   </div>`;
