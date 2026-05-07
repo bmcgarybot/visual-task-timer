@@ -474,9 +474,19 @@
     .modal-actions button { flex: 1; min-height: 44px; }
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 8px 6px; gap: 6px; }
-    .profile-slider-arrow { width: 36px; min-width: 36px; font-size: 1.3rem; }
-    .classroom-profile-card { flex: 0 0 auto; min-width: 100px; }
-    .classroom-columns-slider .cols-arrow { width: 36px; min-width: 36px; font-size: 1.4rem; margin: 0 2px; }
+    .profile-slider-arrow { width: 28px; min-width: 28px; font-size: 1rem; }
+    .classroom-profile-card { flex: 0 0 auto; min-width: 80px; padding: 8px; }
+    .classroom-profile-card .cp-emoji { font-size: 1.3rem; }
+    .classroom-profile-card .cp-name { font-size: 0.75rem; }
+    .classroom-profile-card .cp-meta { font-size: 0.6rem; }
+    .classroom-profile-slider .cps-arrow { width: 28px; min-width: 28px; font-size: 1rem; height: 50px; }
+    .classroom-columns-slider .cols-arrow { display: none; }
+    .classroom-columns-slider .cols-track {
+      scroll-snap-type: x mandatory; gap: 12px;
+    }
+    .classroom-column {
+      flex: 0 0 85vw; min-width: 85vw; scroll-snap-align: start;
+    }
     .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
   }
@@ -494,11 +504,13 @@
     .view-tab { padding: 4px 8px !important; font-size: 0.75rem !important; }
     .profile-bar { padding: 0; }
     .profile-slider-track { padding: 4px 4px; gap: 4px; }
-    .profile-slider-arrow { width: 32px; min-width: 32px; font-size: 1.2rem; }
+    .profile-slider-arrow { width: 24px; min-width: 24px; font-size: 1rem; }
     .profile-chip { font-size: 0.75rem; padding: 4px 10px; }
-    .classroom-profile-card { flex: 0 0 auto; min-width: 80px; padding: 8px 10px; }
-    .classroom-profile-card .cp-emoji { font-size: 1.5rem; }
-    .classroom-columns-slider .cols-arrow { width: 30px; min-width: 30px; font-size: 1.2rem; margin: 0 1px; }
+    .classroom-profile-card { flex: 0 0 auto; min-width: 70px; padding: 6px 8px; }
+    .classroom-profile-card .cp-emoji { font-size: 1.2rem; }
+    .classroom-profile-slider .cps-arrow { width: 24px; min-width: 24px; font-size: 0.9rem; height: 40px; }
+    .classroom-columns-slider .cols-arrow { display: none; }
+    .classroom-column { flex: 0 0 90vw; min-width: 90vw; }
     .profile-chip { padding: 3px 10px; font-size: 0.78rem; }
     .reward-bar { padding: 4px 10px; font-size: 0.75rem; }
     .global-controls { padding: 4px 8px; gap: 4px; }
