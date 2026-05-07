@@ -173,7 +173,6 @@
   }
   .classroom-profile-slider .cps-arrow:hover { background: var(--info); }
   .classroom-profile-slider .cps-arrow:active { transform: scale(0.95); }
-  .classroom-profile-slider .cps-arrow.disabled { opacity: 0.2; cursor: default; pointer-events: none; }
   .classroom-profile-card {
     flex: 0 0 calc(33% - 10px); scroll-snap-align: start;
     min-width: 180px; padding: 14px 18px; border-radius: 14px;
@@ -1218,8 +1217,7 @@ function scrollProfiles(dir){
 function scrollClassroomProfiles(dir){
   const track=document.getElementById('cpsTrack');
   if(!track)return;
-  track.scrollBy({left:dir*160,behavior:'smooth'});
-  setTimeout(updateClassroomArrows,350);
+  track.scrollBy({left:dir*200,behavior:'smooth'});
 }
 function updateProfileArrows(){
   const track=document.getElementById('profileTrack');
@@ -1233,15 +1231,7 @@ function updateProfileArrows(){
   right.classList.toggle('disabled',!canScrollRight);
 }
 function updateClassroomArrows(){
-  const track=document.getElementById('cpsTrack');
-  if(!track)return;
-  const left=document.getElementById('cpsArrowLeft');
-  const right=document.getElementById('cpsArrowRight');
-  if(!left||!right)return;
-  const canScrollLeft=track.scrollLeft>4;
-  const canScrollRight=track.scrollLeft<track.scrollWidth-track.clientWidth-4;
-  left.classList.toggle('disabled',!canScrollLeft);
-  right.classList.toggle('disabled',!canScrollRight);
+  // no-op — classroom arrows always enabled
 }
 function switchProfile(id){
   // Save current profile's tasks with their running state + interval references
