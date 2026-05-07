@@ -764,6 +764,7 @@
         <img id="profilePhotoPreview" style="display:none;max-width:80px;max-height:80px;border-radius:50%;">
         <input type="file" id="profilePhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhotoUpload(event)">
       </div>
+      <button class="btn-small" id="profilePhotoRemoveBtn" onclick="event.stopPropagation();removeProfilePhoto()" style="display:none;margin-top:6px;background:#c0392b;color:white;font-size:0.8rem;">✕ Remove Photo</button>
     </div>
     </div>
     <div class="modal-actions">
@@ -1124,7 +1125,7 @@ function switchProfile(id){
   render(); renderRewardBar(); save();
 }
 let editingProfileId = null;
-function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';profilePhotoData=null;document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profilePhotoPreview').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
+function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';profilePhotoData=null;document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profilePhotoPreview').style.display='none';document.getElementById('profilePhotoRemoveBtn').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
 function editProfile(id){
   const p=profiles.find(pr=>pr.id===id);if(!p)return;
   editingProfileId=id;
@@ -1134,7 +1135,8 @@ function editProfile(id){
   document.getElementById('profileModalTitle').textContent='Edit Profile';
   document.getElementById('profileDeleteBtn').style.display=profiles.length>1?'inline-block':'none';
   const pp=document.getElementById('profilePhotoPreview');
-  if(profilePhotoData){pp.src=profilePhotoData;pp.style.display='block';}else{pp.style.display='none';}
+  const rb=document.getElementById('profilePhotoRemoveBtn');
+  if(profilePhotoData){pp.src=profilePhotoData;pp.style.display='block';rb.style.display='inline-block';}else{pp.style.display='none';rb.style.display='none';}
   document.querySelectorAll('#profileModal .color-swatch').forEach(s=>s.classList.toggle('selected',s.dataset.pemoji===p.emoji));
   document.getElementById('profileModal').classList.add('open');lockScroll();
 }
@@ -1148,13 +1150,20 @@ function handleProfilePhotoUpload(e){
     profilePhotoData=ev.target.result;
     const img=document.getElementById('profilePhotoPreview');
     img.src=profilePhotoData;img.style.display='block';
+    document.getElementById('profilePhotoRemoveBtn').style.display='inline-block';
   };r.readAsDataURL(f);
+}
+function removeProfilePhoto(){
+  profilePhotoData=null;
+  document.getElementById('profilePhotoPreview').style.display='none';
+  document.getElementById('profilePhotoInput').value='';
+  document.getElementById('profilePhotoRemoveBtn').style.display='none';
 }
 function saveProfile(){
   const name=document.getElementById('profileName').value.trim()||'Profile';
   if(editingProfileId){
     const p=profiles.find(pr=>pr.id===editingProfileId);
-    if(p){p.name=name;p.emoji=selectedProfileEmoji;if(profilePhotoData)p.photo=profilePhotoData;}
+    if(p){p.name=name;p.emoji=selectedProfileEmoji;p.photo=profilePhotoData||null;}
   } else {
     const p={id:genId(),name,emoji:selectedProfileEmoji,stars:0,streak:0,lastCompleteDate:null,tasks:[],photo:profilePhotoData||null};
     profiles.push(p);
