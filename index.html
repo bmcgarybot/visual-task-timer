@@ -119,18 +119,57 @@
   .classroom-view-tab { display: none; }
   @media (min-width: 768px) { .classroom-view-tab { display: block; } }
 
-  /* ===== PROFILE BAR ===== */
+  /* ===== PROFILE BAR (SLIDER) ===== */
   .profile-bar {
-    display: flex; gap: 8px; padding: 10px 20px; align-items: center;
-    background: var(--surface); border-bottom: 1px solid var(--surface2); overflow-x: auto;
+    display: flex; align-items: center; background: var(--surface); border-bottom: 1px solid var(--surface2);
+    padding: 0; position: relative;
   }
+  .profile-slider-wrap {
+    flex: 1; overflow: hidden; position: relative;
+  }
+  .profile-slider-track {
+    display: flex; gap: 8px; padding: 10px 8px; align-items: center;
+    overflow-x: auto; scroll-behavior: smooth; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .profile-slider-track::-webkit-scrollbar { display: none; }
+  .profile-slider-arrow {
+    display: none; align-items: center; justify-content: center;
+    width: 32px; min-width: 32px; height: 100%; background: var(--surface);
+    color: var(--text-dim); font-size: 1.2rem; cursor: pointer; border: none;
+    font-family: var(--font-main); z-index: 2; transition: color 0.15s;
+  }
+  .profile-slider-arrow:hover { color: var(--accent); }
+  .profile-slider-arrow.visible { display: flex; }
   .profile-chip {
     padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
     background: var(--surface2); color: var(--text-dim); white-space: nowrap; cursor: pointer;
-    font-family: var(--font-main); border: 2px solid transparent;
+    font-family: var(--font-main); border: 2px solid transparent; flex-shrink: 0;
+    transition: transform 0.15s, background 0.15s;
   }
+  .profile-chip:active { transform: scale(0.95); }
   .profile-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
   .profile-chip.add { background: transparent; border: 2px dashed var(--text-dim); color: var(--text-dim); }
+
+  /* Classroom profile slider — horizontal scroll carousel */
+  .classroom-profile-slider {
+    display: flex; gap: 8px; overflow-x: auto; padding: 0 4px 10px 4px;
+    scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .classroom-profile-slider::-webkit-scrollbar { display: none; }
+  .classroom-profile-card {
+    flex: 0 0 auto; scroll-snap-align: start;
+    min-width: 140px; padding: 10px 14px; border-radius: 14px;
+    background: var(--surface2); text-align: center; cursor: pointer;
+    border: 2px solid transparent; transition: border-color 0.15s, transform 0.15s;
+  }
+  .classroom-profile-card.active { border-color: var(--accent); }
+  .classroom-profile-card:active { transform: scale(0.96); }
+  .classroom-profile-card .cp-emoji { font-size: 2rem; }
+  .classroom-profile-card .cp-name { font-size: 0.85rem; font-weight: 700; margin-top: 4px; }
+  .classroom-profile-card .cp-meta { font-size: 0.7rem; color: var(--text-dim); margin-top: 2px; }
+  .classroom-profile-card img.cp-photo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; }
 
   /* ===== REWARD/STREAK BAR ===== */
   .reward-bar {
@@ -398,7 +437,9 @@
     .modal { border-radius: 16px 16px 0 0; max-height: 85vh; }
     .modal-overlay { align-items: flex-end; padding: 0; }
     .modal-actions button { flex: 1; min-height: 44px; }
-    .profile-bar { padding: 8px 10px; }
+    .profile-bar { padding: 0; }
+    .profile-slider-track { padding: 8px 6px; gap: 6px; }
+    .classroom-profile-card { min-width: 120px; }
     .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
   }
@@ -414,7 +455,11 @@
     button { min-height: 32px !important; padding: 4px 10px !important; font-size: 0.8rem !important; }
     .btn-icon { min-height: 32px !important; min-width: 32px !important; padding: 3px 6px !important; font-size: 0.9rem !important; }
     .view-tab { padding: 4px 8px !important; font-size: 0.75rem !important; }
-    .profile-bar { padding: 4px 8px; }
+    .profile-bar { padding: 0; }
+    .profile-slider-track { padding: 4px 4px; gap: 4px; }
+    .profile-chip { font-size: 0.75rem; padding: 4px 10px; }
+    .classroom-profile-card { min-width: 100px; padding: 8px 10px; }
+    .classroom-profile-card .cp-emoji { font-size: 1.5rem; }
     .profile-chip { padding: 3px 10px; font-size: 0.78rem; }
     .reward-bar { padding: 4px 10px; font-size: 0.75rem; }
     .global-controls { padding: 4px 8px; gap: 4px; }
@@ -518,7 +563,11 @@
 </div>
 
 <!-- PROFILE BAR -->
-<div class="profile-bar" id="profileBar"></div>
+<div class="profile-bar" id="profileBar">
+  <button class="profile-slider-arrow" id="profileArrowLeft" onclick="scrollProfiles(-1)">‹</button>
+  <div class="profile-slider-wrap"><div class="profile-slider-track" id="profileTrack"></div></div>
+  <button class="profile-slider-arrow" id="profileArrowRight" onclick="scrollProfiles(1)">›</button>
+</div>
 
 <!-- REWARD BAR -->
 <div class="reward-bar" id="rewardBar"></div>
@@ -789,7 +838,7 @@
 
 <script>
 // ===== VERSION & GUIDED TOUR SYSTEM =====
-const APP_VERSION = '1.6.1';
+const APP_VERSION = '1.7.0';
 
 // ---- Onboarding tour (first-time users) ----
 // Desktop/tablet gets classroom view mention, mobile doesn't
@@ -1129,11 +1178,36 @@ function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padS
 
 // ===== PROFILES =====
 function renderProfiles(){
-  const bar=document.getElementById('profileBar');
-  bar.innerHTML=profiles.map(p=>{
+  const track=document.getElementById('profileTrack');
+  if(!track) return;
+  track.innerHTML=profiles.map(p=>{
     const icon=p.photo?`<img src="${p.photo}" style="width:22px;height:22px;border-radius:50%;object-fit:cover;vertical-align:middle;">`:p.emoji;
     return `<button class="profile-chip ${p.id===activeProfileId?'active':''}" onclick="switchProfile('${p.id}')">${icon} ${p.name}${p.id===activeProfileId?' <span onclick="event.stopPropagation();editProfile(\''+p.id+'\')" style="font-size:0.7rem;opacity:0.7;margin-left:4px;">✏️</span>':''}</button>`;
   }).join('')+`<button class="profile-chip add" onclick="openProfileModal()">＋</button>`;
+  // Scroll active chip into view
+  setTimeout(()=>{
+    const active=track.querySelector('.profile-chip.active');
+    if(active) active.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    updateProfileArrows();
+  },50);
+}
+function scrollProfiles(dir){
+  const track=document.getElementById('profileTrack');
+  if(!track)return;
+  track.scrollBy({left:dir*160,behavior:'smooth'});
+  setTimeout(updateProfileArrows,350);
+}
+function updateProfileArrows(){
+  const track=document.getElementById('profileTrack');
+  if(!track)return;
+  const left=document.getElementById('profileArrowLeft');
+  const right=document.getElementById('profileArrowRight');
+  if(!left||!right)return;
+  const canScrollLeft=track.scrollLeft>4;
+  const canScrollRight=track.scrollLeft<track.scrollWidth-track.clientWidth-4;
+  const needArrows=track.scrollWidth>track.clientWidth+8;
+  left.classList.toggle('visible',needArrows&&canScrollLeft);
+  right.classList.toggle('visible',needArrows&&canScrollRight);
 }
 function switchProfile(id){
   // Save current profile's tasks with their running state + interval references
@@ -1474,11 +1548,25 @@ function renderClassroom() {
     </div>`;
   }).join('');
 
+  // Build profile slider cards for classroom
+  const profileCards = profiles.map(p => {
+    const isHidden = hidden.includes(p.id);
+    const icon = p.photo ? `<img class="cp-photo" src="${p.photo}">` : `<div class="cp-emoji">${p.emoji}</div>`;
+    const stars = p.stars || 0;
+    const streak = p.streak || 0;
+    return `<div class="classroom-profile-card ${isHidden ? '' : 'active'}" onclick="toggleClassroomProfile('${p.id}')">
+      ${icon}
+      <div class="cp-name">${p.name}</div>
+      <div class="cp-meta">⭐${stars}${streak > 0 ? ' 🔥' + streak : ''}${isHidden ? ' (hidden)' : ''}</div>
+    </div>`;
+  }).join('');
+
   container.innerHTML = `<div style="width:100%;">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:0 0 10px 0;align-items:center;">
-      <span style="font-size:0.8rem;color:var(--text-dim);font-weight:700;">Show:</span>${profileToggles}
-      <button class="btn-small btn-primary" onclick="openProfileModal()" style="font-size:0.8rem;">＋ Add Student</button>
+    <div style="display:flex;align-items:center;gap:8px;padding:0 0 6px 0;">
+      <span style="font-size:0.8rem;color:var(--text-dim);font-weight:700;white-space:nowrap;">👥 Students:</span>
+      <button class="btn-small btn-primary" onclick="openProfileModal()" style="font-size:0.8rem;flex-shrink:0;">＋ Add</button>
     </div>
+    <div class="classroom-profile-slider">${profileCards}</div>
     <div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;">${columnsHtml}</div>
   </div>`;
 }
@@ -1756,6 +1844,14 @@ switchLayout(currentLayout);
 render();
 if(settings.locked)updateLockUI();
 if(currentView==='weekly')renderWeekBar();
+// Profile slider: update arrows on scroll & resize
+(function(){
+  const track=document.getElementById('profileTrack');
+  if(track){
+    track.addEventListener('scroll',updateProfileArrows);
+    new ResizeObserver(updateProfileArrows).observe(track);
+  }
+})();
 // Tour: first visit → onboarding; returning user → what's new (if version changed)
 if(!checkFirstVisit()) checkWhatsNew();
 </script>
