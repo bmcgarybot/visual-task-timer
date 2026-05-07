@@ -1291,7 +1291,7 @@ function switchProfile(id){
   } else {
     loadProfileTasks();
   }
-  render(); renderRewardBar(); save();
+  render(); renderProfiles(); renderRewardBar(); save();
 }
 let editingProfileId = null;
 function openProfileModal(){editingProfileId=null;selectedProfileEmoji='🧒';profilePhotoData=null;document.getElementById('profileName').value='';document.getElementById('profileModalTitle').textContent='Add Profile';document.getElementById('profileDeleteBtn').style.display='none';document.getElementById('profilePhotoPreview').style.display='none';document.getElementById('profilePhotoRemoveBtn').style.display='none';document.getElementById('profileModal').classList.add('open');lockScroll();}
