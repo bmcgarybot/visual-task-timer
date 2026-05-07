@@ -481,8 +481,8 @@
   <button class="btn-success" onclick="startAll()">▶ Start All</button>
   <button class="btn-warning" onclick="pauseAll()">⏸ Pause</button>
   <button class="btn-info" onclick="resetAll()">↺ Reset</button>
-  <button class="btn-icon" onclick="exportSchedule()">💾</button>
-  <button class="btn-icon" onclick="document.getElementById('importInput').click()">📂</button>
+  <button class="btn-icon" onclick="exportSchedule()" title="Save your setup to a file">💾 Save</button>
+  <button class="btn-icon" onclick="document.getElementById('importInput').click()" title="Load a saved setup file">📂 Open</button>
   <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSchedule(event)">
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;"><button class="btn-warning" style="background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;font-size:0.95rem;padding:10px 18px;">💬 Send Feedback</button></a>
   <span class="save-indicator" id="saveIndicator">💾</span>
@@ -697,6 +697,7 @@ const ONBOARDING_STEPS = [
   { title: 'Start Timers', body: 'Tap ▶ Start on any task — or Start All to run them in sequence! Watch the color fill as time passes.', target: '#globalControls' },
   { title: 'Earn Stars ⭐', body: 'Each completed timer earns a star. Set a star goal in Settings to unlock rewards!', target: '#rewardBar' },
   { title: 'Settings & Kid Lock', body: 'Customize themes, set a PIN lock (so little hands can\'t change things), and adjust sounds.', target: '#settingsBtn' },
+  { title: 'Save & Sync', body: 'Use 💾 Save to download your setup as a file. Open it on another phone, tablet, or computer with 📂 Open to keep everything in sync!', target: '#globalControls' },
   { title: 'Need Help Later?', body: 'Tap the ❓ button anytime to see this guide again. Now go add your first task!', target: '#helpBtn' },
 ];
 
@@ -1205,8 +1206,22 @@ function load(){
 }
 
 // ===== EXPORT/IMPORT =====
-function exportSchedule(){const blob=new Blob([JSON.stringify({tasks,profiles,settings,version:2},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='taskbuddy-schedule.json';a.click();}
-function importSchedule(event){const file=event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.tasks){tasks=d.tasks.map(t=>({...t,running:false,remaining:t.totalSeconds}));render();save();}}catch(err){alert('Invalid file!');}};reader.readAsText(file);event.target.value='';}
+function exportSchedule(){
+  const blob=new Blob([JSON.stringify({tasks,profiles,settings,version:2},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='taskbuddy-schedule.json';a.click();
+  showTransition('💾 Saved! Open this file on another device or browser to sync your setup.');
+}
+function importSchedule(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();reader.onload=e=>{
+    try{const d=JSON.parse(e.target.result);
+    if(d.tasks){tasks=d.tasks.map(t=>({...t,running:false,remaining:t.totalSeconds}));render();save();}
+    if(d.profiles){profiles=d.profiles;renderProfiles();save();}
+    if(d.settings){Object.assign(settings,d.settings);applySettings();save();}
+    showTransition('📂 Loaded! Your tasks, profiles, and settings have been restored.');
+    }catch(err){alert('Couldn\'t read that file. Make sure it\'s a TaskBuddy save file (.json)');}
+  };reader.readAsText(file);event.target.value='';
+}
 
 // ===== KEYBOARD =====
 document.addEventListener('keydown',e=>{
