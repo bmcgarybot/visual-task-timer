@@ -693,7 +693,7 @@
 
 <script>
 // ===== VERSION & GUIDED TOUR SYSTEM =====
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.5.3';
 
 // ---- Onboarding tour (first-time users) ----
 const ONBOARDING_STEPS = [
@@ -710,11 +710,11 @@ const ONBOARDING_STEPS = [
 
 // ---- What's New tour (version updates) ----
 const WHATS_NEW_STEPS = [
-  { title: '✨ What\'s New in v1.5.0', body: 'We\'ve made some improvements! Tap through to see what changed.', target: null },
+  { title: '✨ What\'s New in v1.5.3', body: 'A few improvements! Tap through to see what changed.', target: null },
+  { title: '📱 Better Mobile Layout', body: 'The top bar and bottom controls now fit cleanly on phones — even with larger text sizes.', target: '#topBar' },
   { title: '🔊 Timer Sounds Fixed', body: 'Completion sounds now work properly on iPhones and iPads. Start a timer and hear it chime when done!', target: '#globalControls' },
-  { title: '💡 Screen Stays On', body: 'While a timer is running, your screen won\'t auto-lock — so the visual timer stays visible.', target: '.task-container' },
-  { title: '📱 Cleaner Mobile Layout', body: 'Everything fits better on phone screens. The toolbar stays compact so your tasks get more room.', target: '#topBar' },
-  { title: '❓ Help Button', body: 'New! Tap this anytime to replay the guided tour and learn about all the features.', target: '#helpBtn' },
+  { title: '💾 Save & Sync', body: 'Save your setup to a file, then Open it on any other device to keep everything in sync.', target: '#globalControls' },
+  { title: '❓ Help Button', body: 'Tap this anytime to replay the guided tour and learn about all the features.', target: '#helpBtn' },
 ];
 
 let tourSteps = [];
