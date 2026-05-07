@@ -91,6 +91,34 @@
   .layout-btn { padding: 6px 10px; border-radius: 8px; background: transparent; color: var(--text-dim); font-size: 1rem; }
   .layout-btn.active { background: var(--info); color: #fff; }
 
+  /* ===== CLASSROOM VIEW ===== */
+  .classroom-container { display: flex; gap: 16px; padding: 16px; overflow-x: auto; min-height: 60vh; }
+  .classroom-column {
+    flex: 0 0 280px; background: var(--surface); border-radius: var(--radius);
+    border: 2px solid var(--surface2); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .classroom-header {
+    padding: 14px 16px; background: var(--surface2); text-align: center;
+    font-weight: 800; font-size: 1.1rem; border-bottom: 2px solid var(--surface2);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .classroom-header .student-emoji { font-size: 1.6rem; }
+  .classroom-tasks { padding: 10px; display: flex; flex-direction: column; gap: 10px; flex: 1; overflow-y: auto; }
+  .classroom-task {
+    background: var(--bg); border-radius: 12px; padding: 12px;
+    border: 2px solid var(--surface2); transition: border-color 0.3s;
+  }
+  .classroom-task.active { border-color: var(--accent); }
+  .classroom-task.completed { border-color: var(--success); opacity: 0.7; }
+  .classroom-task .ct-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+  .classroom-task .ct-time { font-size: 1.8rem; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; padding: 6px 0; }
+  .classroom-task .ct-progress { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  .classroom-task .ct-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s linear; }
+  .classroom-task .ct-controls { display: flex; gap: 6px; justify-content: center; }
+  .classroom-task .ct-controls button { font-size: 0.8rem; padding: 6px 10px; min-height: 36px; }
+  .classroom-view-tab { display: none; }
+  @media (min-width: 768px) { .classroom-view-tab { display: block; } }
+
   /* ===== PROFILE BAR ===== */
   .profile-bar {
     display: flex; gap: 8px; padding: 10px 20px; align-items: center;
@@ -449,6 +477,7 @@
     <div class="view-tabs" id="viewTabs">
       <button class="view-tab active" data-view="daily" onclick="switchView('daily')">📋 Daily</button>
       <button class="view-tab" data-view="weekly" onclick="switchView('weekly')">📅 Weekly</button>
+      <button class="view-tab classroom-view-tab" data-view="classroom" onclick="switchView('classroom')">🏫 Classroom</button>
     </div>
     <div class="layout-toggles" id="layoutToggles">
       <button class="layout-btn active" data-layout="grid" onclick="switchLayout('grid')">⊞</button>
@@ -475,9 +504,12 @@
 <div class="week-bar" id="weekBar" style="display:none;"></div>
 
 <!-- TASK AREA -->
-<div class="task-container">
+<div class="task-container" id="taskContainer">
   <div class="task-grid layout-grid" id="taskGrid"></div>
 </div>
+
+<!-- CLASSROOM VIEW -->
+<div class="classroom-container" id="classroomContainer" style="display:none;"></div>
 
 <!-- GLOBAL CONTROLS -->
 <div class="global-controls" id="globalControls">
@@ -693,10 +725,22 @@
 
 <script>
 // ===== VERSION & GUIDED TOUR SYSTEM =====
-const APP_VERSION = '1.5.3';
+const APP_VERSION = '1.6.0';
 
 // ---- Onboarding tour (first-time users) ----
-const ONBOARDING_STEPS = [
+// Desktop/tablet gets classroom view mention, mobile doesn't
+const ONBOARDING_STEPS = window.innerWidth >= 768 ? [
+  { title: 'Welcome to TaskBuddy! 🌟', body: 'A visual task timer for classrooms, families, and individuals. Let\'s take a quick tour!', target: null },
+  { title: 'Add a Task', body: 'Click + Add to create a task. Set a name, timer duration, color, sound, and even a reward photo!', target: '#addBtn' },
+  { title: 'Profiles', body: 'Create a profile for each student or family member. Each gets their own tasks, stars, and streak.', target: '#profileBar' },
+  { title: '🏫 Classroom View', body: 'On desktop/tablet, switch to Classroom view to see ALL students side-by-side with their timers running simultaneously!', target: '#viewTabs' },
+  { title: 'Daily & Weekly Views', body: 'Daily shows all tasks. Weekly lets you assign tasks to specific days of the week.', target: '#viewTabs' },
+  { title: 'Timer Controls', body: 'Start All runs timers in sequence. Each task also has its own play/pause/reset buttons.', target: '#globalControls' },
+  { title: 'Stars & Rewards ⭐', body: 'Every completed timer earns a star. Set a goal in Settings — when they hit it, the reward celebration fires!', target: '#rewardBar' },
+  { title: 'Save & Sync', body: 'Use 💾 Save to download your setup. Open it on any device with 📂 Open to keep everything in sync!', target: '#globalControls' },
+  { title: 'Settings & Kid Lock', body: 'Pick themes, enable dyslexia-friendly font, set a PIN lock to prevent kids from changing things.', target: '#settingsBtn' },
+  { title: 'Need Help Later?', body: 'Click ❓ anytime to see this tour again. Happy timing!', target: '#helpBtn' },
+] : [
   { title: 'Welcome to TaskBuddy! 🌟', body: 'A visual task timer designed for everyone — especially kids and families. Let\'s take a quick look at how it works!', target: null },
   { title: 'Add a Task', body: 'Tap the + Add button to create your first task. Pick a name, set a timer, choose a color and sound!', target: '#addBtn' },
   { title: 'Profiles', body: 'Create separate profiles for each person. Each profile gets its own tasks, stars, and streaks.', target: '#profileBar' },
@@ -709,12 +753,18 @@ const ONBOARDING_STEPS = [
 ];
 
 // ---- What's New tour (version updates) ----
-const WHATS_NEW_STEPS = [
-  { title: '✨ What\'s New in v1.5.3', body: 'A few improvements! Tap through to see what changed.', target: null },
-  { title: '📱 Better Mobile Layout', body: 'The top bar and bottom controls now fit cleanly on phones — even with larger text sizes.', target: '#topBar' },
-  { title: '🔊 Timer Sounds Fixed', body: 'Completion sounds now work properly on iPhones and iPads. Start a timer and hear it chime when done!', target: '#globalControls' },
-  { title: '💾 Save & Sync', body: 'Save your setup to a file, then Open it on any other device to keep everything in sync.', target: '#globalControls' },
-  { title: '❓ Help Button', body: 'Tap this anytime to replay the guided tour and learn about all the features.', target: '#helpBtn' },
+const WHATS_NEW_STEPS = window.innerWidth >= 768 ? [
+  { title: '✨ What\'s New in v1.6.0', body: 'Big update! Tap through to see the new features.', target: null },
+  { title: '🏫 Classroom View', body: 'NEW! See all students side-by-side with their timers. Start, pause, and reset any student\'s timers from one screen.', target: '#viewTabs' },
+  { title: '👥 Multi-Profile Timers', body: 'Switching profiles no longer pauses timers. Multiple students can have timers running at the same time!', target: '#profileBar' },
+  { title: '🔊 iOS Sound Fixes', body: 'Timer sounds work better on iPhones and iPads. If a timer finishes while you\'re away, you\'ll hear it when you come back.', target: '#globalControls' },
+  { title: '❓ Help Anytime', body: 'Click the ❓ button to replay this tour whenever you need it.', target: '#helpBtn' },
+] : [
+  { title: '✨ What\'s New in v1.6.0', body: 'A few improvements! Tap through to see what changed.', target: null },
+  { title: '👥 Multi-Profile Timers', body: 'Switching profiles no longer pauses timers. Multiple people can have timers running at the same time!', target: '#profileBar' },
+  { title: '🔊 iOS Sound Fixes', body: 'Timer sounds work better on iPhones and iPads. If a timer finishes while you\'re away, you\'ll hear it when you come back.', target: '#globalControls' },
+  { title: '📱 Better Mobile Layout', body: 'Top bar and bottom controls fit better on phones, even with larger text sizes.', target: '#topBar' },
+  { title: '❓ Help Anytime', body: 'Tap ❓ to replay this tour whenever you need it.', target: '#helpBtn' },
 ];
 
 let tourSteps = [];
@@ -1041,6 +1091,7 @@ function claimReward(){activeProfile().stars=0;document.getElementById('rewardMo
 
 // ===== RENDER =====
 function render(){
+  if(currentView === 'classroom') { renderClassroom(); return; }
   const grid=document.getElementById('taskGrid');
   const visible=getVisibleTasks();
   if(!visible.length){
@@ -1190,8 +1241,161 @@ function selectAllDays(){selectedDays=[0,1,2,3,4,5,6];updateDayUI();}
 function updateDayUI(){document.querySelectorAll('.day-check').forEach(b=>{const active=selectedDays.includes(parseInt(b.dataset.day));b.style.opacity=active?'1':'0.35';b.style.background=active?'var(--info)':'transparent';b.style.border=active?'2px solid var(--info)':'2px solid var(--info)';b.style.color=active?'#fff':'var(--text-dim)';});}
 
 // ===== VIEWS =====
-function switchView(v){currentView=v;document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';if(v==='weekly')renderWeekBar();render();save();}
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));
+  document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';
+  document.getElementById('taskContainer').style.display=v==='classroom'?'none':'block';
+  document.getElementById('classroomContainer').style.display=v==='classroom'?'flex':'none';
+  document.getElementById('profileBar').style.display=v==='classroom'?'none':'';
+  if(v==='weekly')renderWeekBar();
+  if(v==='classroom')renderClassroom();
+  else render();
+  save();
+}
 function switchLayout(l){currentLayout=l;const g=document.getElementById('taskGrid');g.classList.remove('layout-grid','layout-vertical','layout-horizontal');g.classList.add('layout-'+l);document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));save();}
+
+// ===== CLASSROOM VIEW =====
+function renderClassroom() {
+  const container = document.getElementById('classroomContainer');
+  const allTasks = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+
+  container.innerHTML = profiles.map(profile => {
+    // Get tasks for this profile — check live state first, then storage
+    let pTasks;
+    if (profile.id === activeProfileId) {
+      pTasks = tasks;
+    } else if (profileTimerState[profile.id]) {
+      pTasks = profileTimerState[profile.id].tasks;
+    } else {
+      pTasks = (allTasks[profile.id] || []);
+    }
+
+    const tasksHtml = pTasks.map(task => {
+      const elapsed = task.totalSeconds - task.remaining;
+      const pct = task.totalSeconds > 0 ? (elapsed / task.totalSeconds) * 100 : 0;
+      const isDone = task.remaining <= 0 && task.totalSeconds > 0;
+      const cls = ['classroom-task', task.running ? 'active' : '', isDone ? 'completed' : ''].filter(Boolean).join(' ');
+      return `<div class="${cls}">
+        <div class="ct-name">${task.emoji} ${task.name}</div>
+        <div class="ct-time" style="color:${isDone ? 'var(--success)' : task.running ? 'var(--accent)' : 'var(--text-dim)'}">
+          ${isDone ? '✓ Done!' : formatTime(task.remaining)}
+        </div>
+        <div class="ct-progress"><div class="ct-progress-fill" style="width:${pct}%;background:${task.color}"></div></div>
+        <div class="ct-controls">
+          ${isDone ? `<button class="btn-small btn-success" onclick="classroomAction('${profile.id}','${task.id}','reset')">↺</button>` :
+          task.running ? `<button class="btn-small btn-warning" onclick="classroomAction('${profile.id}','${task.id}','pause')">⏸</button>` :
+          `<button class="btn-small btn-success" onclick="classroomAction('${profile.id}','${task.id}','start')">▶</button>`}
+        </div>
+      </div>`;
+    }).join('');
+
+    const starCount = profile.stars || 0;
+    const streak = profile.streak || 0;
+
+    return `<div class="classroom-column">
+      <div class="classroom-header">
+        <span class="student-emoji">${profile.emoji}</span> ${profile.name}
+        <span style="font-size:0.75rem;color:var(--text-dim);">⭐${starCount} ${streak > 0 ? '🔥' + streak : ''}</span>
+      </div>
+      <div class="classroom-tasks">
+        ${tasksHtml || '<div style="text-align:center;color:var(--text-dim);padding:20px;">No tasks</div>'}
+      </div>
+      <div style="padding:8px;text-align:center;border-top:1px solid var(--surface2);">
+        <button class="btn-small btn-success" onclick="classroomStartAll('${profile.id}')" style="font-size:0.8rem;">▶ All</button>
+        <button class="btn-small btn-warning" onclick="classroomPauseAll('${profile.id}')" style="font-size:0.8rem;">⏸ All</button>
+        <button class="btn-small btn-info" onclick="classroomResetAll('${profile.id}')" style="font-size:0.8rem;">↺ All</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function classroomAction(profileId, taskId, action) {
+  // Get the task list for this profile
+  let pTasks;
+  if (profileId === activeProfileId) {
+    pTasks = tasks;
+  } else if (profileTimerState[profileId]) {
+    pTasks = profileTimerState[profileId].tasks;
+  } else {
+    // Load from storage
+    const allTasks = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+    pTasks = allTasks[profileId] || [];
+    profileTimerState[profileId] = { tasks: pTasks, intervals: {} };
+  }
+
+  const task = pTasks.find(t => t.id === taskId);
+  if (!task) return;
+
+  if (action === 'start' && task.remaining > 0) {
+    task.running = true;
+    task._completionHandled = false;
+    task._startedAt = Date.now();
+    task._remainingAtStart = task.remaining;
+    requestNotifPermission();
+    requestWakeLock();
+    if (!profileTimerState[profileId]) profileTimerState[profileId] = { tasks: pTasks, intervals: {} };
+    clearInterval((profileTimerState[profileId].intervals || {})[taskId]);
+    const intv = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - task._startedAt) / 1000);
+      task.remaining = Math.max(0, task._remainingAtStart - elapsed);
+      if (task.remaining <= 0) {
+        task.remaining = 0; task.running = false; task._completionHandled = true;
+        clearInterval(intv);
+        playSound(task.sound || 'chime');
+        sendNotification('⏰ Timer Done!', task.name + ' is complete!');
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+        // Award star to profile
+        const p = profiles.find(pr => pr.id === profileId);
+        if (p) { p.stars = (p.stars || 0) + 1; }
+        if (!pTasks.some(t => t.running)) releaseWakeLock();
+      }
+      if (currentView === 'classroom') renderClassroom();
+      // Save the profile tasks
+      const allT = JSON.parse(localStorage.getItem('tb_allTasks') || '{}');
+      allT[profileId] = pTasks;
+      localStorage.setItem('tb_allTasks', JSON.stringify(allT));
+    }, 1000);
+    if (!profileTimerState[profileId].intervals) profileTimerState[profileId].intervals = {};
+    profileTimerState[profileId].intervals[taskId] = intv;
+  } else if (action === 'pause') {
+    task.running = false;
+    if (profileTimerState[profileId] && profileTimerState[profileId].intervals) {
+      clearInterval(profileTimerState[profileId].intervals[taskId]);
+    }
+  } else if (action === 'reset') {
+    task.running = false; task.remaining = task.totalSeconds;
+    if (profileTimerState[profileId] && profileTimerState[profileId].intervals) {
+      clearInterval(profileTimerState[profileId].intervals[taskId]);
+    }
+  }
+  if (currentView === 'classroom') renderClassroom();
+}
+
+function classroomStartAll(profileId) {
+  let pTasks;
+  if (profileId === activeProfileId) pTasks = tasks;
+  else if (profileTimerState[profileId]) pTasks = profileTimerState[profileId].tasks;
+  else return;
+  const first = pTasks.find(t => t.remaining > 0 && !t.running);
+  if (first) classroomAction(profileId, first.id, 'start');
+}
+
+function classroomPauseAll(profileId) {
+  let pTasks;
+  if (profileId === activeProfileId) pTasks = tasks;
+  else if (profileTimerState[profileId]) pTasks = profileTimerState[profileId].tasks;
+  else return;
+  pTasks.forEach(t => { if (t.running) classroomAction(profileId, t.id, 'pause'); });
+}
+
+function classroomResetAll(profileId) {
+  let pTasks;
+  if (profileId === activeProfileId) pTasks = tasks;
+  else if (profileTimerState[profileId]) pTasks = profileTimerState[profileId].tasks;
+  else return;
+  pTasks.forEach(t => classroomAction(profileId, t.id, 'reset'));
+}
 function renderWeekBar(){const bar=document.getElementById('weekBar'),today=new Date().getDay();bar.innerHTML=DAYS_SHORT.map((d,i)=>`<button class="day-btn ${i===currentDay?'active':''} ${i===today?'today':''}" onclick="switchDay(${i})">${d}</button>`).join('');}
 function switchDay(d){currentDay=d;renderWeekBar();render();}
 
