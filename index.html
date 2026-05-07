@@ -581,6 +581,17 @@
     <label>Reward Message</label>
     <input type="text" id="rewardMessage" value="🎉 Amazing! Time for your reward!" placeholder="Custom reward message" style="padding:8px;border-radius:8px;border:2px solid var(--surface2);background:var(--bg);color:var(--text);font-family:var(--font-main);width:100%;" onchange="saveSettings()">
   </div>
+
+  <div class="setting-row">
+    <label>🏫 Classroom View</label>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <label class="toggle-switch">
+        <input type="checkbox" id="classroomToggle" onchange="toggleClassroomMode(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+      <span style="font-size:0.78rem;color:var(--text-dim);">Best on tablets & desktops</span>
+    </div>
+  </div>
 </div>
 
 <!-- ADD/EDIT TASK MODAL -->
@@ -751,6 +762,7 @@ const ONBOARDING_STEPS = window.innerWidth >= 768 ? [
   { title: 'Start Timers', body: 'Tap ▶ Start on any task — or Start All to run them in sequence! Watch the color fill as time passes.', target: '#globalControls' },
   { title: 'Earn Stars ⭐', body: 'Each completed timer earns a star. Set a star goal in Settings to unlock rewards!', target: '#rewardBar' },
   { title: 'Settings & Kid Lock', body: 'Customize themes, set a PIN lock (so little hands can\'t change things), and adjust sounds.', target: '#settingsBtn' },
+  { title: '🏫 Classroom View', body: 'Got a tablet or desktop? Enable Classroom View in Settings to see all students side-by-side. Best on bigger screens!', target: '#settingsBtn' },
   { title: 'Save & Sync', body: 'Use 💾 Save to download your setup as a file. Open it on another phone, tablet, or computer with 📂 Open to keep everything in sync!', target: '#globalControls' },
   { title: 'Need Help Later?', body: 'Tap the ❓ button anytime to see this guide again. Now go add your first task!', target: '#helpBtn' },
 ];
@@ -1457,6 +1469,11 @@ function toggleTheme(){
 function toggleDyslexic(on){
   document.documentElement.classList.toggle('dyslexic',on);settings.dyslexic=on;save();
 }
+function toggleClassroomMode(on){
+  settings.classroomForced=on;
+  document.querySelectorAll('.classroom-view-tab').forEach(el=>el.style.display=on?'block':'');
+  save();
+}
 
 // ===== KID LOCK =====
 function toggleLock(){
@@ -1548,6 +1565,8 @@ function applySettings(){
   if(settings.dyslexic)document.documentElement.classList.add('dyslexic');
   document.getElementById('themeToggle').textContent=settings.light?'☀️':'🌙';
   document.getElementById('dyslexicToggle').checked=settings.dyslexic;
+  document.getElementById('classroomToggle').checked=!!settings.classroomForced;
+  if(settings.classroomForced) document.querySelectorAll('.classroom-view-tab').forEach(el=>el.style.display='block');
   document.getElementById('transitionWarnSec').value=settings.transitionWarn||10;
   document.getElementById('pinInput').value=settings.pin||'';
   document.getElementById('rewardGoal').value=settings.rewardGoal||10;
