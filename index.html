@@ -54,19 +54,17 @@
   /* ===== TOP BAR ===== */
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 20px; background: var(--surface);
-    border-bottom: 2px solid var(--surface2); gap: 10px;
+    padding: 12px 16px; background: var(--surface);
+    border-bottom: 2px solid var(--surface2); gap: 8px;
   }
   .top-bar h1 {
-    font-size: 1.5rem; font-weight: 800;
+    font-size: 1.4rem; font-weight: 800;
     background: linear-gradient(135deg, #e94560, #f0c040, #4ecca3, #7b68ee);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     white-space: nowrap;
   }
-  .top-bar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  /* Mobile hamburger menu */
-  .menu-toggle { display: none; background: var(--surface2); color: var(--text); border: none; border-radius: 10px; padding: 8px 12px; font-size: 1.3rem; cursor: pointer; }
-  .top-bar-controls.menu-open { display: flex !important; }
+  .top-bar-controls { display: flex; gap: 6px; align-items: center; }
+  .top-bar-right { display: flex; gap: 4px; align-items: center; }
 
   /* ===== BUTTONS ===== */
   button {
@@ -348,33 +346,28 @@
 
   /* ===== RESPONSIVE — MOBILE ===== */
   @media (max-width: 600px) {
-    .top-bar { padding: 10px 14px; }
-    .top-bar h1 { font-size: 1.2rem; }
-    .menu-toggle { display: block; }
-    .top-bar-controls { display: none; position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); padding: 12px 14px; border-bottom: 2px solid var(--surface2); z-index: 40; flex-direction: column; gap: 10px; }
-    .top-bar-controls.menu-open { display: flex !important; }
-    .view-tabs { width: 100%; justify-content: center; }
-    .view-tab { flex: 1; text-align: center; padding: 10px 8px; }
-    .layout-toggles { width: 100%; justify-content: center; }
-    .top-bar-controls > button, .top-bar-controls > span { width: 100%; }
-    .top-bar-controls .btn-icon { width: auto; }
-    .top-bar-btns { display: flex; gap: 8px; width: 100%; }
-    .top-bar-btns > * { flex: 1; min-height: 48px; }
+    .top-bar { padding: 8px 10px; gap: 6px; }
+    .top-bar h1 { font-size: 1.1rem; }
+    .top-bar-controls { gap: 4px; }
+    .btn-primary.add-btn { padding: 8px 12px; font-size: 0.85rem; }
+    .btn-icon { padding: 6px 8px; font-size: 1rem; min-height: 40px; min-width: 40px; }
+    .top-bar-right .btn-icon { padding: 4px 7px; min-height: 36px; min-width: 36px; font-size: 0.95rem; }
+    .view-tab { padding: 7px 10px; font-size: 0.8rem; }
+    .layout-toggles { display: none; }
     .task-container { padding: 10px; }
     .task-grid.layout-grid { grid-template-columns: 1fr; }
     .task-grid.layout-horizontal { grid-auto-columns: 85vw; }
     .task-card { min-height: 160px; }
     .task-time-display { font-size: 2.5rem; }
-    button { min-height: 48px; }
-    .btn-small { min-height: 48px; padding: 12px 16px; }
-    .btn-icon { min-height: 48px; min-width: 48px; }
-    .global-controls { padding: 10px 14px; }
-    .global-controls button { flex: 1; min-width: 0; font-size: 0.88rem; }
+    button { min-height: 44px; }
+    .btn-small { min-height: 44px; padding: 10px 14px; }
+    .global-controls { padding: 10px 12px; }
+    .global-controls button { flex: 1; min-width: 0; font-size: 0.85rem; padding: 10px 8px; }
     .modal { border-radius: 16px 16px 0 0; max-height: 85vh; }
     .modal-overlay { align-items: flex-end; padding: 0; }
-    .modal-actions button { flex: 1; min-height: 48px; }
-    .profile-bar { padding: 8px 14px; }
-    .reward-bar { padding: 10px 14px; font-size: 0.85rem; }
+    .modal-actions button { flex: 1; min-height: 44px; }
+    .profile-bar { padding: 8px 10px; }
+    .reward-bar { padding: 8px 12px; font-size: 0.82rem; }
     .settings-panel { width: 100%; max-width: 100%; }
   }
   @media (max-width: 380px) {
@@ -390,39 +383,48 @@
     .task-container { padding: 30px 40px; }
   }
 
-  /* ===== WHAT'S NEW MODAL ===== */
-  .whats-new-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999;
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    animation: fadeIn 0.3s ease;
+  /* ===== GUIDED TOUR / WHAT'S NEW ===== */
+  .tour-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,0.65);
+    transition: opacity 0.3s;
   }
-  .whats-new-box {
-    background: var(--surface); border-radius: 20px; padding: 28px;
-    max-width: 420px; width: 100%; max-height: 80vh; overflow-y: auto;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  .tour-spotlight {
+    position: fixed; z-index: 9999;
+    border-radius: 12px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(233,69,96,0.5);
+    transition: all 0.4s ease;
+    pointer-events: none;
   }
-  .whats-new-box h2 { font-size: 1.3rem; margin-bottom: 6px; color: var(--accent); }
-  .whats-new-box .wn-version { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 16px; }
-  .whats-new-box ul { list-style: none; padding: 0; margin: 0 0 20px 0; }
-  .whats-new-box li {
-    padding: 10px 0; border-bottom: 1px solid var(--surface2);
-    font-size: 0.95rem; line-height: 1.5; color: var(--text);
+  .tour-tooltip {
+    position: fixed; z-index: 10000;
+    background: var(--surface); border: 2px solid var(--accent);
+    border-radius: 16px; padding: 20px 22px;
+    max-width: 320px; width: calc(100vw - 32px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    animation: tourPop 0.3s ease;
   }
-  .whats-new-box li:last-child { border-bottom: none; }
-  .whats-new-box li .wn-emoji { margin-right: 8px; }
-  .whats-new-btn {
-    width: 100%; padding: 14px; border: none; border-radius: 12px;
-    background: var(--accent); color: #fff; font-size: 1rem; font-weight: 700;
-    cursor: pointer; font-family: var(--font-main);
-  }
-  .whats-new-btn:active { transform: scale(0.97); }
+  @keyframes tourPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .tour-tooltip h3 { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; }
+  .tour-tooltip p { font-size: 0.92rem; color: var(--text); line-height: 1.5; margin-bottom: 16px; }
+  .tour-tooltip .tour-step-info { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 12px; }
+  .tour-actions { display: flex; gap: 8px; }
+  .tour-actions button { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: var(--font-main); }
+  .tour-btn-next { background: var(--accent); color: #fff; }
+  .tour-btn-next:active { transform: scale(0.97); }
+  .tour-btn-skip { background: var(--surface2); color: var(--text-dim); }
+  .tour-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
+  .tour-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--surface2); }
+  .tour-dot.active { background: var(--accent); }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 </style>
 </head>
 <body>
 
-<!-- WHAT'S NEW MODAL (injected by JS on version change) -->
-<div id="whatsNewOverlay" class="whats-new-overlay" style="display:none;"></div>
+<!-- TOUR SYSTEM (spotlight + tooltip injected by JS) -->
+<div id="tourOverlay" class="tour-overlay" style="display:none;"></div>
+<div id="tourSpotlight" class="tour-spotlight" style="display:none;"></div>
+<div id="tourTooltip" class="tour-tooltip" style="display:none;"></div>
 
 <!-- TRANSITION WARNING BANNER -->
 <div class="transition-warning" id="transitionWarning"></div>
@@ -438,26 +440,25 @@
 </div>
 
 <!-- TOP BAR -->
-<div class="top-bar">
+<div class="top-bar" id="topBar">
   <h1>🌟 TaskBuddy</h1>
-  <button class="menu-toggle" onclick="document.querySelector('.top-bar-controls').classList.toggle('menu-open')" aria-label="Menu">☰</button>
   <div class="top-bar-controls">
-    <div class="view-tabs">
+    <div class="view-tabs" id="viewTabs">
       <button class="view-tab active" data-view="daily" onclick="switchView('daily')">📋 Daily</button>
       <button class="view-tab" data-view="weekly" onclick="switchView('weekly')">📅 Weekly</button>
     </div>
-    <div class="layout-toggles">
+    <div class="layout-toggles" id="layoutToggles">
       <button class="layout-btn active" data-layout="grid" onclick="switchLayout('grid')">⊞</button>
       <button class="layout-btn" data-layout="vertical" onclick="switchLayout('vertical')">☰</button>
       <button class="layout-btn" data-layout="horizontal" onclick="switchLayout('horizontal')">⫼</button>
     </div>
-    <div class="top-bar-btns">
-      <button class="btn-primary" onclick="openAddModal()">＋ Add</button>
+    <button class="btn-primary add-btn" id="addBtn" onclick="openAddModal()">＋ Add</button>
+    <div class="top-bar-right">
       <button class="btn-icon" id="themeToggle" onclick="toggleTheme()">🌙</button>
-      <button class="btn-icon" onclick="openSettings()">⚙️</button>
+      <button class="btn-icon" id="settingsBtn" onclick="openSettings()">⚙️</button>
       <button class="btn-icon" id="lockBtn" onclick="toggleLock()">🔓</button>
+      <button class="btn-icon" id="helpBtn" onclick="startOnboarding()" title="How to use">❓</button>
     </div>
-    <span class="save-indicator" id="saveIndicator">💾</span>
   </div>
 </div>
 
@@ -484,6 +485,7 @@
   <button class="btn-icon" onclick="document.getElementById('importInput').click()">📂</button>
   <input type="file" id="importInput" accept=".json" style="display:none" onchange="importSchedule(event)">
   <a href="https://docs.google.com/forms/d/e/1FAIpQLSfoVeJdePHQUAPQONdMAyuZIoKEvv4u2k5eXg6DOoDmM1otdQ/viewform" target="_blank" style="text-decoration:none;"><button class="btn-warning" style="background:linear-gradient(135deg,var(--warning),var(--accent));color:#fff;font-size:0.95rem;padding:10px 18px;">💬 Send Feedback</button></a>
+  <span class="save-indicator" id="saveIndicator">💾</span>
 </div>
 
 <!-- SETTINGS PANEL -->
@@ -683,31 +685,146 @@
 </div>
 
 <script>
-// ===== VERSION & WHAT'S NEW =====
-const APP_VERSION = '1.4.0';
-const CHANGELOG = [
-  { emoji: '🔊', text: 'Fixed timer completion sound on iPhones and iPads' },
-  { emoji: '📱', text: 'Cleaner mobile layout with hamburger menu' },
-  { emoji: '🔔', text: 'Optional browser notifications when timers finish' },
-  { emoji: '💡', text: 'Screen stays on while timers are running' },
+// ===== VERSION & GUIDED TOUR SYSTEM =====
+const APP_VERSION = '1.5.0';
+
+// ---- Onboarding tour (first-time users) ----
+const ONBOARDING_STEPS = [
+  { title: 'Welcome to TaskBuddy! 🌟', body: 'A visual task timer designed for everyone — especially kids and families. Let\'s take a quick look at how it works!', target: null },
+  { title: 'Add a Task', body: 'Tap the + Add button to create your first task. Pick a name, set a timer, choose a color and sound!', target: '#addBtn' },
+  { title: 'Profiles', body: 'Create separate profiles for each person. Each profile gets its own tasks, stars, and streaks.', target: '#profileBar' },
+  { title: 'Daily & Weekly Views', body: 'Switch between Daily view (all tasks) and Weekly view (tasks scheduled for each day).', target: '#viewTabs' },
+  { title: 'Start Timers', body: 'Tap ▶ Start on any task — or Start All to run them in sequence! Watch the color fill as time passes.', target: '#globalControls' },
+  { title: 'Earn Stars ⭐', body: 'Each completed timer earns a star. Set a star goal in Settings to unlock rewards!', target: '#rewardBar' },
+  { title: 'Settings & Kid Lock', body: 'Customize themes, set a PIN lock (so little hands can\'t change things), and adjust sounds.', target: '#settingsBtn' },
+  { title: 'Need Help Later?', body: 'Tap the ❓ button anytime to see this guide again. Now go add your first task!', target: '#helpBtn' },
 ];
+
+// ---- What's New tour (version updates) ----
+const WHATS_NEW_STEPS = [
+  { title: '✨ What\'s New in v1.5.0', body: 'We\'ve made some improvements! Tap through to see what changed.', target: null },
+  { title: '🔊 Timer Sounds Fixed', body: 'Completion sounds now work properly on iPhones and iPads. Start a timer and hear it chime when done!', target: '#globalControls' },
+  { title: '💡 Screen Stays On', body: 'While a timer is running, your screen won\'t auto-lock — so the visual timer stays visible.', target: '.task-container' },
+  { title: '📱 Cleaner Mobile Layout', body: 'Everything fits better on phone screens. The toolbar stays compact so your tasks get more room.', target: '#topBar' },
+  { title: '❓ Help Button', body: 'New! Tap this anytime to replay the guided tour and learn about all the features.', target: '#helpBtn' },
+];
+
+let tourSteps = [];
+let tourIndex = 0;
+let tourActive = false;
+
+function startTour(steps) {
+  tourSteps = steps;
+  tourIndex = 0;
+  tourActive = true;
+  showTourStep();
+}
+
+function showTourStep() {
+  if (tourIndex >= tourSteps.length) { endTour(); return; }
+  const step = tourSteps[tourIndex];
+  const overlay = document.getElementById('tourOverlay');
+  const spotlight = document.getElementById('tourSpotlight');
+  const tooltip = document.getElementById('tourTooltip');
+
+  overlay.style.display = 'block';
+
+  // Spotlight the target element
+  if (step.target) {
+    const el = document.querySelector(step.target);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const pad = 6;
+      spotlight.style.display = 'block';
+      spotlight.style.left = (rect.left - pad) + 'px';
+      spotlight.style.top = (rect.top - pad) + 'px';
+      spotlight.style.width = (rect.width + pad * 2) + 'px';
+      spotlight.style.height = (rect.height + pad * 2) + 'px';
+    } else {
+      spotlight.style.display = 'none';
+    }
+  } else {
+    spotlight.style.display = 'none';
+  }
+
+  // Progress dots
+  const dots = tourSteps.map((_, i) => `<div class="tour-dot ${i === tourIndex ? 'active' : ''}"></div>`).join('');
+
+  // Build tooltip
+  const isLast = tourIndex === tourSteps.length - 1;
+  const isFirst = tourIndex === 0;
+  tooltip.innerHTML = `
+    <div class="tour-step-info">Step ${tourIndex + 1} of ${tourSteps.length}</div>
+    <div class="tour-dots">${dots}</div>
+    <h3>${step.title}</h3>
+    <p>${step.body}</p>
+    <div class="tour-actions">
+      ${isFirst ? `<button class="tour-btn-skip" onclick="endTour()">Skip</button>` : `<button class="tour-btn-skip" onclick="prevTourStep()">← Back</button>`}
+      <button class="tour-btn-next" onclick="nextTourStep()">${isLast ? 'Done! ✓' : 'Next →'}</button>
+    </div>
+  `;
+  tooltip.style.display = 'block';
+
+  // Position tooltip below or above target
+  requestAnimationFrame(() => {
+    const ttRect = tooltip.getBoundingClientRect();
+    if (step.target) {
+      const el = document.querySelector(step.target);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        const below = rect.bottom + 12;
+        const above = rect.top - ttRect.height - 12;
+        // If below fits, use below; else use above; else center
+        if (below + ttRect.height < window.innerHeight) {
+          tooltip.style.top = below + 'px';
+        } else if (above > 0) {
+          tooltip.style.top = above + 'px';
+        } else {
+          tooltip.style.top = '50%';
+          tooltip.style.transform = 'translateY(-50%)';
+        }
+        // Center horizontally near target
+        let left = rect.left + rect.width / 2 - ttRect.width / 2;
+        left = Math.max(16, Math.min(left, window.innerWidth - ttRect.width - 16));
+        tooltip.style.left = left + 'px';
+        tooltip.style.transform = tooltip.style.transform || '';
+        return;
+      }
+    }
+    // No target — center on screen
+    tooltip.style.top = '50%';
+    tooltip.style.left = '50%';
+    tooltip.style.transform = 'translate(-50%, -50%)';
+  });
+}
+
+function nextTourStep() { tourIndex++; showTourStep(); }
+function prevTourStep() { if (tourIndex > 0) { tourIndex--; showTourStep(); } }
+
+function endTour() {
+  tourActive = false;
+  document.getElementById('tourOverlay').style.display = 'none';
+  document.getElementById('tourSpotlight').style.display = 'none';
+  document.getElementById('tourTooltip').style.display = 'none';
+}
+
+function startOnboarding() { startTour(ONBOARDING_STEPS); }
+
+function checkFirstVisit() {
+  if (!localStorage.getItem('taskbuddy_onboarded')) {
+    localStorage.setItem('taskbuddy_onboarded', '1');
+    startTour(ONBOARDING_STEPS);
+    return true;
+  }
+  return false;
+}
 
 function checkWhatsNew() {
   const seen = localStorage.getItem('taskbuddy_seen_version');
-  if (seen === APP_VERSION) return;
-  const overlay = document.getElementById('whatsNewOverlay');
-  overlay.innerHTML = `<div class="whats-new-box">
-    <h2>✨ What's New</h2>
-    <div class="wn-version">Version ${APP_VERSION}</div>
-    <ul>${CHANGELOG.map(c => `<li><span class="wn-emoji">${c.emoji}</span>${c.text}</li>`).join('')}</ul>
-    <button class="whats-new-btn" onclick="dismissWhatsNew()">Got it!</button>
-  </div>`;
-  overlay.style.display = 'flex';
-}
-
-function dismissWhatsNew() {
+  if (seen === APP_VERSION) return false;
   localStorage.setItem('taskbuddy_seen_version', APP_VERSION);
-  document.getElementById('whatsNewOverlay').style.display = 'none';
+  startTour(WHATS_NEW_STEPS);
+  return true;
 }
 
 // ===== STATE =====
@@ -799,7 +916,6 @@ function playSound(type) {
 }
 
 // ===== HELPERS =====
-function closeMenu(){const c=document.querySelector('.top-bar-controls');if(c)c.classList.remove('menu-open');}
 function genId(){return'_'+Math.random().toString(36).substr(2,9);}
 function getVisibleTasks(){if(currentView==='weekly')return tasks.filter(t=>t.days&&t.days.includes(currentDay));return tasks;}
 function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
@@ -999,8 +1115,8 @@ function selectAllDays(){selectedDays=[0,1,2,3,4,5,6];updateDayUI();}
 function updateDayUI(){document.querySelectorAll('.day-check').forEach(b=>{const active=selectedDays.includes(parseInt(b.dataset.day));b.style.opacity=active?'1':'0.35';b.style.background=active?'var(--info)':'transparent';b.style.border=active?'2px solid var(--info)':'2px solid var(--info)';b.style.color=active?'#fff':'var(--text-dim)';});}
 
 // ===== VIEWS =====
-function switchView(v){closeMenu();currentView=v;document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';if(v==='weekly')renderWeekBar();render();save();}
-function switchLayout(l){closeMenu();currentLayout=l;const g=document.getElementById('taskGrid');g.classList.remove('layout-grid','layout-vertical','layout-horizontal');g.classList.add('layout-'+l);document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));save();}
+function switchView(v){currentView=v;document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';if(v==='weekly')renderWeekBar();render();save();}
+function switchLayout(l){currentLayout=l;const g=document.getElementById('taskGrid');g.classList.remove('layout-grid','layout-vertical','layout-horizontal');g.classList.add('layout-'+l);document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));save();}
 function renderWeekBar(){const bar=document.getElementById('weekBar'),today=new Date().getDay();bar.innerHTML=DAYS_SHORT.map((d,i)=>`<button class="day-btn ${i===currentDay?'active':''} ${i===today?'today':''}" onclick="switchDay(${i})">${d}</button>`).join('');}
 function switchDay(d){currentDay=d;renderWeekBar();render();}
 
@@ -1125,7 +1241,8 @@ switchLayout(currentLayout);
 render();
 if(settings.locked)updateLockUI();
 if(currentView==='weekly')renderWeekBar();
-checkWhatsNew();
+// Tour: first visit → onboarding; returning user → what's new (if version changed)
+if(!checkFirstVisit()) checkWhatsNew();
 </script>
 </body>
 </html>
