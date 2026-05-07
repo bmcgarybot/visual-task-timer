@@ -436,13 +436,15 @@
   /* ===== GUIDED TOUR / WHAT'S NEW ===== */
   .tour-overlay {
     position: fixed; inset: 0; z-index: 9998;
-    background: rgba(0,0,0,0.65);
+    background: transparent;
+    pointer-events: auto;
     transition: opacity 0.3s;
   }
   .tour-spotlight {
     position: fixed; z-index: 9999;
     border-radius: 12px;
-    box-shadow: 0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(233,69,96,0.5);
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6), 0 0 30px 8px rgba(233,69,96,0.6);
+    border: 2px solid rgba(233,69,96,0.8);
     transition: all 0.4s ease;
     pointer-events: none;
   }
@@ -873,11 +875,14 @@ function showTourStep() {
       spotlight.style.top = (rect.top - pad) + 'px';
       spotlight.style.width = (rect.width + pad * 2) + 'px';
       spotlight.style.height = (rect.height + pad * 2) + 'px';
+      overlay.style.background = 'transparent';
     } else {
       spotlight.style.display = 'none';
+      overlay.style.background = 'rgba(0,0,0,0.6)';
     }
   } else {
     spotlight.style.display = 'none';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
   }
 
   // Progress dots
