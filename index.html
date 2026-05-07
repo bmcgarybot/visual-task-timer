@@ -55,14 +55,18 @@
   .top-bar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 14px 20px; background: var(--surface);
-    border-bottom: 2px solid var(--surface2); flex-wrap: wrap; gap: 10px;
+    border-bottom: 2px solid var(--surface2); gap: 10px;
   }
   .top-bar h1 {
     font-size: 1.5rem; font-weight: 800;
     background: linear-gradient(135deg, #e94560, #f0c040, #4ecca3, #7b68ee);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    white-space: nowrap;
   }
   .top-bar-controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  /* Mobile hamburger menu */
+  .menu-toggle { display: none; background: var(--surface2); color: var(--text); border: none; border-radius: 10px; padding: 8px 12px; font-size: 1.3rem; cursor: pointer; }
+  .top-bar-controls.menu-open { display: flex !important; }
 
   /* ===== BUTTONS ===== */
   button {
@@ -344,19 +348,27 @@
 
   /* ===== RESPONSIVE — MOBILE ===== */
   @media (max-width: 600px) {
-    .top-bar { padding: 12px 14px; flex-direction: column; align-items: stretch; gap: 10px; }
-    .top-bar h1 { font-size: 1.25rem; text-align: center; }
-    .top-bar-controls { justify-content: center; }
+    .top-bar { padding: 10px 14px; }
+    .top-bar h1 { font-size: 1.2rem; }
+    .menu-toggle { display: block; }
+    .top-bar-controls { display: none; position: absolute; top: 56px; left: 0; right: 0; background: var(--surface); padding: 12px 14px; border-bottom: 2px solid var(--surface2); z-index: 40; flex-direction: column; gap: 10px; }
+    .top-bar-controls.menu-open { display: flex !important; }
     .view-tabs { width: 100%; justify-content: center; }
     .view-tab { flex: 1; text-align: center; padding: 10px 8px; }
-    .task-container { padding: 12px; }
+    .layout-toggles { width: 100%; justify-content: center; }
+    .top-bar-controls > button, .top-bar-controls > span { width: 100%; }
+    .top-bar-controls .btn-icon { width: auto; }
+    .top-bar-btns { display: flex; gap: 8px; width: 100%; }
+    .top-bar-btns > * { flex: 1; min-height: 48px; }
+    .task-container { padding: 10px; }
     .task-grid.layout-grid { grid-template-columns: 1fr; }
     .task-grid.layout-horizontal { grid-auto-columns: 85vw; }
-    .task-card { min-height: 180px; }
+    .task-card { min-height: 160px; }
     .task-time-display { font-size: 2.5rem; }
     button { min-height: 48px; }
     .btn-small { min-height: 48px; padding: 12px 16px; }
     .btn-icon { min-height: 48px; min-width: 48px; }
+    .global-controls { padding: 10px 14px; }
     .global-controls button { flex: 1; min-width: 0; font-size: 0.88rem; }
     .modal { border-radius: 16px 16px 0 0; max-height: 85vh; }
     .modal-overlay { align-items: flex-end; padding: 0; }
@@ -397,6 +409,7 @@
 <!-- TOP BAR -->
 <div class="top-bar">
   <h1>🌟 TaskBuddy</h1>
+  <button class="menu-toggle" onclick="document.querySelector('.top-bar-controls').classList.toggle('menu-open')" aria-label="Menu">☰</button>
   <div class="top-bar-controls">
     <div class="view-tabs">
       <button class="view-tab active" data-view="daily" onclick="switchView('daily')">📋 Daily</button>
@@ -407,10 +420,12 @@
       <button class="layout-btn" data-layout="vertical" onclick="switchLayout('vertical')">☰</button>
       <button class="layout-btn" data-layout="horizontal" onclick="switchLayout('horizontal')">⫼</button>
     </div>
-    <button class="btn-primary" onclick="openAddModal()">＋ Add</button>
-    <button class="btn-icon" id="themeToggle" onclick="toggleTheme()">🌙</button>
-    <button class="btn-icon" onclick="openSettings()">⚙️</button>
-    <button class="btn-icon" id="lockBtn" onclick="toggleLock()">🔓</button>
+    <div class="top-bar-btns">
+      <button class="btn-primary" onclick="openAddModal()">＋ Add</button>
+      <button class="btn-icon" id="themeToggle" onclick="toggleTheme()">🌙</button>
+      <button class="btn-icon" onclick="openSettings()">⚙️</button>
+      <button class="btn-icon" id="lockBtn" onclick="toggleLock()">🔓</button>
+    </div>
     <span class="save-indicator" id="saveIndicator">💾</span>
   </div>
 </div>
@@ -677,7 +692,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 // ===== NOTIFICATIONS =====
-let notifPermission = Notification ? Notification.permission : 'denied';
+let notifPermission = (typeof Notification !== 'undefined') ? Notification.permission : 'denied';
 function requestNotifPermission() {
   if(!('Notification' in window)) return;
   if(Notification.permission === 'default') {
@@ -726,6 +741,7 @@ function playSound(type) {
 }
 
 // ===== HELPERS =====
+function closeMenu(){const c=document.querySelector('.top-bar-controls');if(c)c.classList.remove('menu-open');}
 function genId(){return'_'+Math.random().toString(36).substr(2,9);}
 function getVisibleTasks(){if(currentView==='weekly')return tasks.filter(t=>t.days&&t.days.includes(currentDay));return tasks;}
 function formatTime(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
@@ -925,8 +941,8 @@ function selectAllDays(){selectedDays=[0,1,2,3,4,5,6];updateDayUI();}
 function updateDayUI(){document.querySelectorAll('.day-check').forEach(b=>{const active=selectedDays.includes(parseInt(b.dataset.day));b.style.opacity=active?'1':'0.35';b.style.background=active?'var(--info)':'transparent';b.style.border=active?'2px solid var(--info)':'2px solid var(--info)';b.style.color=active?'#fff':'var(--text-dim)';});}
 
 // ===== VIEWS =====
-function switchView(v){currentView=v;document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';if(v==='weekly')renderWeekBar();render();save();}
-function switchLayout(l){currentLayout=l;const g=document.getElementById('taskGrid');g.classList.remove('layout-grid','layout-vertical','layout-horizontal');g.classList.add('layout-'+l);document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));save();}
+function switchView(v){closeMenu();currentView=v;document.querySelectorAll('.view-tab').forEach(t=>t.classList.toggle('active',t.dataset.view===v));document.getElementById('weekBar').style.display=v==='weekly'?'flex':'none';if(v==='weekly')renderWeekBar();render();save();}
+function switchLayout(l){closeMenu();currentLayout=l;const g=document.getElementById('taskGrid');g.classList.remove('layout-grid','layout-vertical','layout-horizontal');g.classList.add('layout-'+l);document.querySelectorAll('.layout-btn').forEach(b=>b.classList.toggle('active',b.dataset.layout===l));save();}
 function renderWeekBar(){const bar=document.getElementById('weekBar'),today=new Date().getDay();bar.innerHTML=DAYS_SHORT.map((d,i)=>`<button class="day-btn ${i===currentDay?'active':''} ${i===today?'today':''}" onclick="switchDay(${i})">${d}</button>`).join('');}
 function switchDay(d){currentDay=d;renderWeekBar();render();}
 
