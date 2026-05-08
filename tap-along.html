@@ -2,399 +2,471 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Tap Along — EFT for Kids</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Tap Along — EFT</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { width:100%; height:100%; overflow:hidden; font-family:'Avenir','Segoe UI',sans-serif; }
-body { background:#1a1a2e; color:#eee; display:flex; flex-direction:column; align-items:center; justify-content:center; touch-action:manipulation; -webkit-user-select:none; user-select:none; }
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Nunito',sans-serif;background:#1a1a2e;color:#fff;min-height:100vh;min-height:100dvh;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.scr{display:none;position:fixed;inset:0;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}.scr.on{display:flex}
 
-/* --- START SCREEN --- */
-#startScreen { text-align:center; padding:20px; }
-#startScreen h1 { font-size:2.2em; margin-bottom:8px; }
-#startScreen h1 span { font-size:1.2em; }
-#startScreen p { color:#aaa; font-size:1em; margin-bottom:24px; }
-.mode-btn { display:block; width:260px; margin:10px auto; padding:16px 20px; border:none; border-radius:16px; font-size:1.1em; font-weight:700; cursor:pointer; transition:transform 0.15s; }
-.mode-btn:active { transform:scale(0.95); }
-#btnQuick { background:linear-gradient(135deg,#4ecdc4,#44a08d); color:#fff; }
-#btnFull { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; }
-#btnExtended { background:linear-gradient(135deg,#f093fb,#f5576c); color:#fff; }
-.mode-sub { font-size:0.75em; font-weight:400; opacity:0.85; display:block; margin-top:4px; }
+/* HOME */
+#home{background:linear-gradient(135deg,#4ecdc4,#44a08d);gap:10px;padding:24px;text-align:center}
+.logo{font-size:clamp(32px,8vw,72px);font-weight:900;color:#fff;text-shadow:0 2px 20px rgba(0,0,0,.15)}
+.logosub{font-size:clamp(12px,2.5vw,16px);color:rgba(255,255,255,.7);max-width:320px;line-height:1.4;margin-bottom:8px}
+.mbtn{display:block;width:280px;margin:6px auto;padding:14px 20px;border:none;border-radius:16px;font-size:1.05em;font-weight:800;font-family:inherit;cursor:pointer;color:#fff;transition:all .15s;text-align:center}
+.mbtn:active{transform:scale(.96)}
+.mbtn1{background:rgba(255,255,255,.18);backdrop-filter:blur(6px)}
+.mbtn2{background:rgba(255,255,255,.12);backdrop-filter:blur(6px)}
+.mbtn3{background:rgba(255,255,255,.08);backdrop-filter:blur(6px)}
+.msub{font-size:.72em;font-weight:400;opacity:.75;display:block;margin-top:3px}
+.foot{margin-top:auto;font-size:.65em;color:rgba(255,255,255,.3);padding:8px}
 
-/* --- TAP SCREEN --- */
-#tapScreen { display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; position:relative; }
-#tapTitle { font-size:1.3em; font-weight:700; margin-bottom:4px; text-align:center; }
-#tapInstruction { font-size:0.95em; color:#aaa; margin-bottom:16px; text-align:center; padding:0 20px; }
+/* SETUP STATEMENT */
+#setup{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.setup-wrap{max-width:380px;padding:24px;text-align:center}
+.setup-emoji{font-size:3.5em;margin-bottom:12px}
+.setup-label{font-size:.75em;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:700}
+.setup-text{font-size:1.2em;font-weight:700;line-height:1.5;margin-bottom:6px;color:rgba(255,255,255,.9)}
+.setup-body{font-size:.9em;color:rgba(255,255,255,.45);line-height:1.6;margin-bottom:20px}
+.setup-hand{width:100px;height:100px;border-radius:50%;background:rgba(78,205,196,.12);border:3px solid rgba(78,205,196,.3);display:flex;align-items:center;justify-content:center;font-size:2.8em;margin:16px auto;animation:tap-pulse 1.2s ease-in-out infinite}
+@keyframes tap-pulse{0%,100%{transform:scale(1);border-color:rgba(78,205,196,.3)}50%{transform:scale(1.08);border-color:rgba(78,205,196,.6)}}
+.setup-count{font-size:2em;font-weight:900;color:#4ecdc4;margin-top:8px}
+.setup-of{font-size:.75em;color:rgba(255,255,255,.3)}
 
-/* Body outline */
-#bodyContainer { position:relative; width:280px; height:420px; margin:0 auto; }
-#bodyOutline { width:100%; height:100%; }
-.tap-point { position:absolute; width:48px; height:48px; border-radius:50%; border:3px solid rgba(255,255,255,0.3); background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; font-size:1.4em; transition:all 0.3s; cursor:pointer; }
-.tap-point.active { border-color:#4ecdc4; background:rgba(78,205,196,0.3); box-shadow:0 0 20px rgba(78,205,196,0.5); animation:pulse-tap 0.8s infinite; }
-.tap-point.done { border-color:#44a08d; background:rgba(68,160,141,0.15); opacity:0.5; }
-@keyframes pulse-tap { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+/* SUDS RATING */
+#suds{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.suds-wrap{max-width:380px;padding:24px;text-align:center}
+.suds-q{font-size:1.15em;font-weight:700;margin-bottom:4px}
+.suds-sub{font-size:.85em;color:rgba(255,255,255,.35);margin-bottom:20px}
+.suds-row{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:16px}
+.suds-btn{width:52px;height:52px;border-radius:50%;border:2px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:#fff;font-size:1.3em;font-weight:800;font-family:inherit;cursor:pointer;transition:all .2s}
+.suds-btn:active{transform:scale(.93)}
+.suds-btn.sel{border-color:#4ecdc4;background:rgba(78,205,196,.15);color:#4ecdc4;box-shadow:0 0 16px rgba(78,205,196,.3)}
+.suds-label{display:flex;justify-content:space-between;width:100%;max-width:300px;margin:0 auto 20px;font-size:.7em;color:rgba(255,255,255,.25)}
 
-/* Point positions on body outline */
-.tp-karate  { top:260px; left:-10px; }
-.tp-eyebrow { top:32px; left:95px; }
-.tp-sideeye { top:52px; left:170px; }
-.tp-undereye { top:72px; left:130px; }
-.tp-undernose { top:95px; left:115px; }
-.tp-chin    { top:118px; left:115px; }
-.tp-collar  { top:165px; left:75px; }
-.tp-underarm { top:230px; left:195px; }
-.tp-tophead { top:2px; left:115px; }
-
-/* Tap counter */
-#tapCounter { font-size:3em; font-weight:900; color:#4ecdc4; margin:8px 0; }
-#tapLabel { font-size:0.85em; color:#888; }
-
-/* Affirmation */
-#affirmation { font-size:1.1em; color:#f093fb; font-style:italic; text-align:center; min-height:2.5em; padding:0 24px; margin-top:8px; transition:opacity 0.3s; }
-
-/* Progress bar */
-#progressWrap { position:absolute; bottom:60px; left:20px; right:20px; height:8px; background:rgba(255,255,255,0.1); border-radius:4px; }
-#progressBar { height:100%; background:linear-gradient(90deg,#4ecdc4,#667eea); border-radius:4px; transition:width 0.3s; width:0%; }
-#progressLabel { position:absolute; bottom:72px; left:20px; font-size:0.75em; color:#888; }
-
+/* TAP SCREEN */
+#tap{background:#1a1a2e}
+.tap-top{position:absolute;top:0;left:0;right:0;padding:16px 20px;z-index:5}
+.tap-name{font-size:1.3em;font-weight:900;text-align:center}
+.tap-inst{font-size:.85em;color:rgba(255,255,255,.4);text-align:center;margin-top:2px}
+.tap-aff{position:absolute;top:85px;left:20px;right:20px;text-align:center;font-size:1em;font-style:italic;color:#4ecdc4;opacity:.7;z-index:5;line-height:1.4}
+/* Body + points */
+.body-wrap{position:relative;width:260px;height:380px;margin:0 auto}
+.body-wrap svg{width:100%;height:100%}
+.tp{position:absolute;width:50px;height:50px;border-radius:50%;border:3px solid rgba(255,255,255,.15);background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:center;font-size:1.5em;cursor:pointer;transition:all .25s;z-index:6}
+.tp.act{border-color:#4ecdc4;background:rgba(78,205,196,.2);box-shadow:0 0 24px rgba(78,205,196,.4);animation:tpp 1s ease-in-out infinite}
+.tp.done{border-color:rgba(78,205,196,.15);background:rgba(78,205,196,.05);opacity:.35}
+.tp.dim{opacity:.1}
+@keyframes tpp{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.p-kc{top:240px;left:-5px}.p-eb{top:20px;left:85px}.p-se{top:40px;left:160px}
+.p-ue{top:60px;left:120px}.p-un{top:85px;left:105px}.p-ch{top:108px;left:105px}
+.p-cb{top:155px;left:65px}.p-ua{top:215px;left:185px}.p-th{top:-8px;left:105px}
+/* Tap counter ring */
+.tcr{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);text-align:center;z-index:5}
+.tcr-num{font-size:2.5em;font-weight:900;color:#4ecdc4}
+.tcr-lbl{font-size:.7em;color:rgba(255,255,255,.25)}
+/* Progress */
+.tap-prog{position:absolute;bottom:54px;left:20px;right:20px;height:6px;background:rgba(255,255,255,.06);border-radius:3px;z-index:5}
+.tap-fill{height:100%;background:linear-gradient(90deg,#4ecdc4,#667eea);border-radius:3px;transition:width .3s}
+.tap-pinfo{position:absolute;bottom:64px;left:20px;font-size:.7em;color:rgba(255,255,255,.2);z-index:5}
 /* Controls */
-#controls { position:absolute; bottom:16px; display:flex; gap:12px; }
-#controls button { padding:10px 24px; border:none; border-radius:12px; font-size:0.95em; font-weight:600; cursor:pointer; }
-#btnPause { background:#667eea; color:#fff; }
-#btnStop { background:#555; color:#fff; }
+.tap-ctrl{position:absolute;bottom:12px;display:flex;gap:10px;z-index:5}
+.tap-ctrl button{padding:10px 22px;border:none;border-radius:12px;font-size:.9em;font-weight:700;font-family:inherit;cursor:pointer}
+.tc-pause{background:rgba(102,126,234,.8);color:#fff}
+.tc-stop{background:rgba(255,255,255,.08);color:rgba(255,255,255,.5)}
 
-/* --- BREATHING SCREEN --- */
-#breathScreen { display:none; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; }
-#breathTitle { font-size:1.3em; font-weight:700; margin-bottom:16px; }
-#breathOrb { width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,#4ecdc4,#44a08d); transition:transform 1.5s ease-in-out; }
-#breathOrb.expand { transform:scale(1.8); }
-#breathLabel { font-size:1.4em; font-weight:600; margin-top:20px; color:#4ecdc4; }
+/* BREATHING */
+#breathe{background:linear-gradient(135deg,#0c3547,#204051)}
+.br-title{font-size:1.2em;font-weight:700;margin-bottom:20px;color:rgba(255,255,255,.7)}
+.br-orb{width:100px;height:100px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,#4ecdc4 50%,#44a08d 100%);box-shadow:0 0 50px rgba(78,205,196,.3);transition:transform 3s ease-in-out,box-shadow 3s ease-in-out}
+.br-orb.in{transform:scale(1.7);box-shadow:0 0 90px rgba(78,205,196,.5)}
+.br-orb.out{transform:scale(1);box-shadow:0 0 30px rgba(78,205,196,.2)}
+.br-label{font-size:1.3em;font-weight:700;margin-top:20px;color:#4ecdc4;min-height:1.5em}
 
-/* --- DONE SCREEN --- */
-#doneScreen { display:none; text-align:center; padding:20px; }
-#doneScreen h1 { font-size:2em; margin-bottom:8px; }
-#doneScreen .stars { font-size:2.5em; margin:16px 0; }
-#doneScreen p { color:#aaa; margin-bottom:20px; }
-#btnRestart { padding:14px 40px; border:none; border-radius:16px; background:linear-gradient(135deg,#4ecdc4,#44a08d); color:#fff; font-size:1.1em; font-weight:700; cursor:pointer; }
+/* ROUND COMPLETE */
+#roundEnd{background:linear-gradient(135deg,#1a1a2e,#16213e)}
+.re-wrap{max-width:380px;padding:24px;text-align:center}
+.re-emoji{font-size:3em;margin-bottom:12px}
+.re-title{font-size:1.5em;font-weight:900;margin-bottom:6px}
+.re-sub{font-size:.85em;color:rgba(255,255,255,.4);margin-bottom:20px;line-height:1.5}
 
-/* Fullscreen helper */
-.hidden { display:none !important; }
+/* DONE */
+#done{background:linear-gradient(135deg,#4ecdc4,#44a08d)}
+.dn-wrap{text-align:center;padding:24px}
+.dn-stars{font-size:3em;margin-bottom:12px}
+.dn-title{font-size:1.8em;font-weight:900;margin-bottom:4px}
+.dn-sub{font-size:.9em;color:rgba(255,255,255,.7);margin-bottom:6px}
+.dn-stat{font-size:.85em;color:rgba(255,255,255,.5);margin-bottom:24px}
+.dn-scores{display:flex;gap:16px;justify-content:center;margin-bottom:24px}
+.dn-sc{text-align:center}
+.dn-sc .n{font-size:2em;font-weight:900}
+.dn-sc .l{font-size:.7em;color:rgba(255,255,255,.5)}
+.dn-btn{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:16px;padding:14px 40px;font-size:1em;font-weight:800;font-family:inherit;cursor:pointer}
 </style>
 </head>
 <body>
 
-<!-- START -->
-<div id="startScreen">
-  <h1><span>👆</span> Tap Along</h1>
-  <p>EFT Tapping for Kids</p>
-  <button class="mode-btn" id="btnQuick" onclick="startSession('quick')">
-    Quick Tap
-    <span class="mode-sub">1 minute • 4 points</span>
-  </button>
-  <button class="mode-btn" id="btnFull" onclick="startSession('full')">
-    Full Round
-    <span class="mode-sub">3-5 minutes • All 9 points</span>
-  </button>
-  <button class="mode-btn" id="btnExtended" onclick="startSession('extended')">
-    Extended Session
-    <span class="mode-sub">8-10 minutes • 3 full rounds</span>
-  </button>
+<!-- HOME -->
+<div class="scr on" id="home">
+<div style="font-size:3.5em;margin-bottom:4px">👆</div>
+<div class="logo">Tap Along</div>
+<div class="logosub">EFT Tapping for Kids & Families<br>Follow the real clinical protocol</div>
+<button class="mbtn mbtn1" onclick="begin('quick')">Quick Calm<span class="msub">1-2 min · 4 key points · 1 round</span></button>
+<button class="mbtn mbtn2" onclick="begin('full')">Full Round<span class="msub">3-5 min · All 9 points · Setup + SUDS</span></button>
+<button class="mbtn mbtn3" onclick="begin('ext')">Deep Session<span class="msub">8-12 min · 3 rounds · Full Basic Recipe</span></button>
+<div class="foot">Quantum Neuroshift™ · v0.2</div>
 </div>
 
-<!-- TAP SESSION -->
-<div id="tapScreen">
-  <div id="tapTitle">Tap here →</div>
-  <div id="tapInstruction">Tap gently with two fingers, 5-7 times</div>
-
-  <div id="bodyContainer">
-    <!-- SVG body outline -->
-    <svg id="bodyOutline" viewBox="0 0 280 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Head -->
-      <ellipse cx="140" cy="55" rx="38" ry="45" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-      <!-- Neck -->
-      <line x1="140" y1="100" x2="140" y2="130" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
-      <!-- Torso -->
-      <path d="M90 130 L90 280 Q90 300 110 300 L170 300 Q190 300 190 280 L190 130 Z" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="rgba(255,255,255,0.02)"/>
-      <!-- Arms -->
-      <path d="M90 145 L40 240 L30 260" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="none"/>
-      <path d="M190 145 L240 240 L250 260" stroke="rgba(255,255,255,0.12)" stroke-width="2" fill="none"/>
-      <!-- Legs -->
-      <line x1="120" y1="300" x2="110" y2="410" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
-      <line x1="160" y1="300" x2="170" y2="410" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
-    </svg>
-
-    <!-- Tap points -->
-    <div class="tap-point tp-karate" data-point="karate" onclick="handleTap(this)">🤚</div>
-    <div class="tap-point tp-eyebrow" data-point="eyebrow" onclick="handleTap(this)">👁️</div>
-    <div class="tap-point tp-sideeye" data-point="sideeye" onclick="handleTap(this)">👁️</div>
-    <div class="tap-point tp-undereye" data-point="undereye" onclick="handleTap(this)">😌</div>
-    <div class="tap-point tp-undernose" data-point="undernose" onclick="handleTap(this)">👃</div>
-    <div class="tap-point tp-chin" data-point="chin" onclick="handleTap(this)">😊</div>
-    <div class="tap-point tp-collar" data-point="collar" onclick="handleTap(this)">💪</div>
-    <div class="tap-point tp-underarm" data-point="underarm" onclick="handleTap(this)">🤗</div>
-    <div class="tap-point tp-tophead" data-point="tophead" onclick="handleTap(this)">🧠</div>
-  </div>
-
-  <div id="tapCounter">0</div>
-  <div id="tapLabel">taps</div>
-  <div id="affirmation"></div>
-
-  <div id="progressWrap"><div id="progressBar"></div></div>
-  <div id="progressLabel">Point 1 of 9</div>
-
-  <div id="controls">
-    <button id="btnPause" onclick="togglePause()">⏸ Pause</button>
-    <button id="btnStop" onclick="stopSession()">✕ Stop</button>
-  </div>
+<!-- SUDS RATING -->
+<div class="scr" id="suds">
+<div class="suds-wrap">
+<div style="font-size:2.5em;margin-bottom:12px">🎯</div>
+<div class="suds-q" id="sudsQ">How big is the feeling right now?</div>
+<div class="suds-sub" id="sudsSub">0 = totally calm · 10 = worst ever</div>
+<div class="suds-row" id="sudsRow"></div>
+<div class="suds-label"><span>Calm</span><span>Biggest</span></div>
+<button class="mbtn mbtn1" id="sudsNext" style="opacity:.3;pointer-events:none" onclick="sudsGo()">Next →</button>
+</div>
 </div>
 
-<!-- BREATHING BREAK -->
-<div id="breathScreen">
-  <div id="breathTitle">Breathing Break</div>
-  <div id="breathOrb"></div>
-  <div id="breathLabel">Breathe in...</div>
+<!-- SETUP STATEMENT -->
+<div class="scr" id="setup">
+<div class="setup-wrap">
+<div class="setup-label" id="setupLabel">Setup Statement</div>
+<div class="setup-emoji">🤚</div>
+<div class="setup-text" id="setupText"></div>
+<div class="setup-body" id="setupBody">Tap the side of your hand (Karate Chop point) while saying this out loud 3 times</div>
+<div class="setup-hand" id="setupHand" onclick="setupTap()">🤚</div>
+<div class="setup-count" id="setupCount">0 / 3</div>
+<div class="setup-of">Say it out loud while tapping</div>
+</div>
+</div>
+
+<!-- TAPPING -->
+<div class="scr" id="tap">
+<div class="tap-top">
+<div class="tap-name" id="tapName"></div>
+<div class="tap-inst" id="tapInst"></div>
+</div>
+<div class="tap-aff" id="tapAff"></div>
+<div class="body-wrap">
+<svg viewBox="0 0 260 380" fill="none">
+<ellipse cx="130" cy="48" rx="35" ry="42" stroke="rgba(255,255,255,.1)" stroke-width="2"/>
+<line x1="130" y1="90" x2="130" y2="120" stroke="rgba(255,255,255,.1)" stroke-width="2"/>
+<path d="M82 120L82 265Q82 282 100 282L160 282Q178 282 178 265L178 120Z" stroke="rgba(255,255,255,.07)" stroke-width="2" fill="rgba(255,255,255,.01)"/>
+<path d="M82 135L35 225L25 245" stroke="rgba(255,255,255,.07)" stroke-width="2" fill="none"/>
+<path d="M178 135L225 225L235 245" stroke="rgba(255,255,255,.07)" stroke-width="2" fill="none"/>
+<line x1="110" y1="282" x2="100" y2="375" stroke="rgba(255,255,255,.07)" stroke-width="2"/>
+<line x1="150" y1="282" x2="160" y2="375" stroke="rgba(255,255,255,.07)" stroke-width="2"/>
+</svg>
+<div class="tp p-kc" data-p="kc" onclick="doTap(this)">🤚</div>
+<div class="tp p-th" data-p="th" onclick="doTap(this)">🧠</div>
+<div class="tp p-eb" data-p="eb" onclick="doTap(this)">👁️</div>
+<div class="tp p-se" data-p="se" onclick="doTap(this)">👁️</div>
+<div class="tp p-ue" data-p="ue" onclick="doTap(this)">😌</div>
+<div class="tp p-un" data-p="un" onclick="doTap(this)">👃</div>
+<div class="tp p-ch" data-p="ch" onclick="doTap(this)">😊</div>
+<div class="tp p-cb" data-p="cb" onclick="doTap(this)">💪</div>
+<div class="tp p-ua" data-p="ua" onclick="doTap(this)">🤗</div>
+</div>
+<div class="tcr"><div class="tcr-num" id="tapNum">0</div><div class="tcr-lbl">taps at this point</div></div>
+<div class="tap-pinfo" id="tapPinfo"></div>
+<div class="tap-prog"><div class="tap-fill" id="tapFill"></div></div>
+<div class="tap-ctrl">
+<button class="tc-pause" id="btnPause" onclick="togglePause()">⏸ Pause</button>
+<button class="tc-stop" onclick="endEarly()">✕ Stop</button>
+</div>
+</div>
+
+<!-- BREATHING -->
+<div class="scr" id="breathe">
+<div class="br-title" id="brTitle">Breathing Break</div>
+<div class="br-orb" id="brOrb"></div>
+<div class="br-label" id="brLabel"></div>
+</div>
+
+<!-- ROUND END (re-rate) -->
+<div class="scr" id="roundEnd">
+<div class="re-wrap">
+<div class="re-emoji">🔄</div>
+<div class="re-title" id="reTitle">Round Complete!</div>
+<div class="re-sub" id="reSub">Let's check in — how big is the feeling now?</div>
+<div class="suds-row" id="reRow"></div>
+<div class="suds-label" style="max-width:300px;margin:0 auto 16px"><span>Calm</span><span>Biggest</span></div>
+<button class="mbtn mbtn1" id="reNext" style="opacity:.3;pointer-events:none">Continue →</button>
+</div>
 </div>
 
 <!-- DONE -->
-<div id="doneScreen">
-  <h1>Amazing Job! 🌟</h1>
-  <div class="stars">⭐⭐⭐</div>
-  <p id="doneMsg">You completed a full tapping round!</p>
-  <p id="doneStat" style="color:#4ecdc4; font-weight:600;"></p>
-  <button id="btnRestart" onclick="resetAll()">Tap Again</button>
+<div class="scr" id="done">
+<div class="dn-wrap">
+<div class="dn-stars">⭐🌟⭐</div>
+<div class="dn-title">Amazing Job!</div>
+<div class="dn-sub" id="dnSub"></div>
+<div class="dn-scores" id="dnScores"></div>
+<div class="dn-stat" id="dnStat"></div>
+<button class="dn-btn" onclick="goHome()">🏠 Tap Again</button>
+</div>
 </div>
 
 <script>
-// --- CONFIG ---
-const POINTS_FULL = ['karate','eyebrow','sideeye','undereye','undernose','chin','collar','underarm','tophead'];
-const POINTS_QUICK = ['karate','eyebrow','collar','tophead'];
+// ===== AUDIO =====
+let AC=null;
+function ia(){if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume()}
+function sn(f,d,v,t){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=t||'sine';o.frequency.value=f;g.gain.setValueAtTime(v||.08,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+(d||.12));o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+(d||.12))}
+function tapSnd(){sn(500+Math.random()*250,.1,.12)}
+function doneSnd(){[523,659,784].forEach((f,i)=>setTimeout(()=>sn(f,.3,.1),i*120))}
+function clickSnd(){sn(600,.06,.06)}
+function vb(m){if(navigator.vibrate)navigator.vibrate(m||25)}
+document.addEventListener('touchstart',ia,{once:true});
+document.addEventListener('click',ia,{once:true});
 
-const POINT_NAMES = {
-  karate:'Karate Chop', eyebrow:'Eyebrow', sideeye:'Side of Eye', undereye:'Under Eye',
-  undernose:'Under Nose', chin:'Chin Point', collar:'Collarbone', underarm:'Under Arm', tophead:'Top of Head'
-};
+// ===== CONFIG =====
+const FULL_PTS=['kc','eb','se','ue','un','ch','cb','ua','th'];
+const QUICK_PTS=['kc','eb','cb','th'];
+const NAMES={kc:'Karate Chop',eb:'Eyebrow',se:'Side of Eye',ue:'Under Eye',un:'Under Nose',ch:'Chin',cb:'Collarbone',ua:'Under Arm',th:'Top of Head'};
+const INST={kc:'Tap the fleshy side of your hand',eb:'Tap at the inner edge of your eyebrow',se:'Tap the bone at the outer corner of your eye',ue:'Tap the bone right under your eye',un:'Tap between your nose and upper lip',ch:'Tap in the crease below your lower lip',cb:'Tap just below where your collarbone meets',ua:'Tap about 4 inches below your armpit',th:'Tap gently on the crown of your head'};
+const TAPS_NEEDED=7;
 
-const POINT_INSTRUCTIONS = {
-  karate:'Tap the side of your hand gently',
-  eyebrow:'Tap at the start of your eyebrow',
-  sideeye:'Tap beside the outside of your eye',
-  undereye:'Tap on the bone under your eye',
-  undernose:'Tap between your nose and lip',
-  chin:'Tap in the dip below your bottom lip',
-  collar:'Tap just below your collarbone',
-  underarm:'Tap under your arm, on your side',
-  tophead:'Tap gently on top of your head'
-};
-
-const AFFIRMATIONS = [
-  "I am safe right now",
-  "I am doing a great job",
-  "It's okay to feel this way",
-  "I am brave and strong",
-  "I can handle this",
-  "My body is calming down",
-  "I choose to feel peaceful",
-  "I am loved just as I am",
-  "This feeling will pass",
-  "I breathe in calm, breathe out worry",
-  "I am getting better at this",
-  "My body knows how to be calm",
-  "I am in charge of how I feel",
-  "Every tap makes me calmer",
-  "I trust myself"
+// Setup statements (kid-friendly)
+const SETUPS=[
+  "Even though I have this big feeling, I'm still a good kid and I'm okay",
+  "Even though I feel worried right now, I love and accept myself",
+  "Even though my body feels tense, I'm safe and I'm doing my best",
+  "Even though I feel upset, I deeply and completely accept myself",
+  "Even though I'm feeling scared, I know I am brave and loved",
+  "Even though this feeling is really big, it's okay to feel this way"
+];
+// Reminder phrases (said during tapping)
+const REMINDERS=[
+  "This big feeling","This worry","Feeling tense","Feeling upset",
+  "This scared feeling","This big emotion"
+];
+// Positive affirmations (later rounds)
+const POSITIVES=[
+  "I choose to feel calm","I am safe right now","My body is relaxing",
+  "I can handle this","I am brave and strong","Peace is flowing in",
+  "I'm letting this feeling go","I feel lighter already",
+  "Every tap helps me feel better","I trust my body to calm down",
+  "I am loved just as I am","This feeling is getting smaller",
+  "I breathe in calm, breathe out worry","I'm doing great"
 ];
 
-const TAPS_PER_POINT = 7;
+// ===== STATE =====
+let mode='full',pts=[],pi=0,tc=0,totalTaps=0,rounds=1,rd=0,paused=false;
+let sudsScores=[],setupReps=0,setupIdx=0;
 
-let mode = 'full';
-let points = [];
-let currentPointIdx = 0;
-let tapCount = 0;
-let totalTaps = 0;
-let roundsTotal = 1;
-let roundsDone = 0;
-let paused = false;
-let audioCtx = null;
+// ===== SCREENS =====
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.remove('on');void document.getElementById(id).offsetWidth;document.getElementById(id).classList.add('on')}
 
-// --- AUDIO ---
-function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
+function goHome(){show('home')}
+
+// ===== START =====
+function begin(m){
+  ia(); mode=m; rd=0; totalTaps=0; sudsScores=[];
+  if(m==='quick'){pts=[...QUICK_PTS];rounds=1;}
+  else if(m==='full'){pts=[...FULL_PTS];rounds=1;}
+  else{pts=[...FULL_PTS];rounds=3;}
+  setupIdx=Math.floor(Math.random()*SETUPS.length);
+  // Quick mode skips SUDS + setup — straight to tapping
+  if(m==='quick'){startRound();return}
+  // Full/Extended: SUDS first
+  showSuds(false);
 }
 
-function playTapSound() {
-  if (!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.frequency.value = 600 + Math.random()*200;
-  osc.type = 'sine';
-  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.15);
-}
-
-function playDoneSound() {
-  if (!audioCtx) return;
-  [523.25, 659.25, 783.99].forEach((f,i) => {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    osc.frequency.value = f; osc.type = 'sine';
-    gain.gain.setValueAtTime(0.12, audioCtx.currentTime + i*0.15);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + i*0.15 + 0.4);
-    osc.start(audioCtx.currentTime + i*0.15);
-    osc.stop(audioCtx.currentTime + i*0.15 + 0.4);
-  });
-}
-
-function vibrate(ms) {
-  if (navigator.vibrate) navigator.vibrate(ms || 30);
-}
-
-// --- SESSION CONTROL ---
-function startSession(m) {
-  initAudio();
-  mode = m;
-  if (m === 'quick') { points = [...POINTS_QUICK]; roundsTotal = 1; }
-  else if (m === 'full') { points = [...POINTS_FULL]; roundsTotal = 1; }
-  else { points = [...POINTS_FULL]; roundsTotal = 3; }
-
-  currentPointIdx = 0; tapCount = 0; totalTaps = 0; roundsDone = 0; paused = false;
-
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('tapScreen').style.display = 'flex';
-  activatePoint();
-}
-
-function activatePoint() {
-  tapCount = 0;
-  document.getElementById('tapCounter').textContent = '0';
-
-  // Reset all points
-  document.querySelectorAll('.tap-point').forEach(el => {
-    el.classList.remove('active','done');
-    if (mode === 'quick' && !POINTS_QUICK.includes(el.dataset.point)) {
-      el.style.opacity = '0.15';
-    } else {
-      el.style.opacity = '1';
-    }
-  });
-
-  // Mark done points
-  for (let i = 0; i < currentPointIdx; i++) {
-    const done = document.querySelector(`[data-point="${points[i]}"]`);
-    if (done) done.classList.add('done');
+// ===== SUDS =====
+function showSuds(isPost){
+  const row=document.getElementById(isPost?'reRow':'sudsRow');
+  row.innerHTML='';
+  for(let i=0;i<=10;i++){
+    const b=document.createElement('button');b.className='suds-btn';b.textContent=i;
+    b.onclick=()=>{
+      row.querySelectorAll('.suds-btn').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel');clickSnd();vb(15);
+      const nx=document.getElementById(isPost?'reNext':'sudsNext');
+      nx.style.opacity='1';nx.style.pointerEvents='auto';
+      nx.dataset.val=i;
+    };
+    row.appendChild(b);
   }
-
-  // Activate current
-  const current = points[currentPointIdx];
-  const el = document.querySelector(`[data-point="${current}"]`);
-  if (el) el.classList.add('active');
-
-  document.getElementById('tapTitle').textContent = POINT_NAMES[current];
-  document.getElementById('tapInstruction').textContent = POINT_INSTRUCTIONS[current];
-  document.getElementById('affirmation').textContent = AFFIRMATIONS[Math.floor(Math.random()*AFFIRMATIONS.length)];
-
-  const totalPoints = points.length * roundsTotal;
-  const donePoints = roundsDone * points.length + currentPointIdx;
-  document.getElementById('progressLabel').textContent = `Point ${donePoints+1} of ${totalPoints}`;
-  document.getElementById('progressBar').style.width = `${(donePoints/totalPoints)*100}%`;
+  if(isPost){
+    document.getElementById('reNext').style.opacity='.3';
+    document.getElementById('reNext').style.pointerEvents='none';
+    document.getElementById('reNext').onclick=()=>reRate();
+    show('roundEnd');
+  }else{
+    document.getElementById('sudsNext').style.opacity='.3';
+    document.getElementById('sudsNext').style.pointerEvents='none';
+    if(sudsScores.length===0){
+      document.getElementById('sudsQ').textContent='How big is the feeling right now?';
+      document.getElementById('sudsSub').textContent='0 = totally calm · 10 = worst ever';
+    }
+    show('suds');
+  }
 }
 
-function handleTap(el) {
-  if (paused) return;
-  const point = el.dataset.point;
-  if (point !== points[currentPointIdx]) return;
+function sudsGo(){
+  const v=parseInt(document.getElementById('sudsNext').dataset.val);
+  sudsScores.push(v);
+  showSetup();
+}
 
-  tapCount++;
-  totalTaps++;
-  document.getElementById('tapCounter').textContent = tapCount;
-  playTapSound();
-  vibrate(30);
+// ===== SETUP STATEMENT =====
+function showSetup(){
+  setupReps=0;
+  document.getElementById('setupText').textContent='"'+SETUPS[setupIdx]+'"';
+  document.getElementById('setupCount').textContent='0 / 3';
+  document.getElementById('setupLabel').textContent=rd>0?'Modified Setup (Round '+(rd+1)+')':'Setup Statement';
+  if(rd>0){
+    // Modified setup for subsequent rounds
+    document.getElementById('setupText').textContent='"Even though I still have some of this feeling, I deeply and completely accept myself"';
+  }
+  show('setup');
+}
 
-  // Flash effect
-  el.style.transform = 'scale(1.3)';
-  setTimeout(() => el.style.transform = '', 150);
+function setupTap(){
+  if(setupReps>=3)return;
+  setupReps++;tapSnd();vb(30);
+  document.getElementById('setupCount').textContent=setupReps+' / 3';
+  const h=document.getElementById('setupHand');
+  h.style.transform='scale(1.2)';setTimeout(()=>h.style.transform='',150);
+  if(setupReps>=3){
+    setTimeout(()=>startRound(),600);
+  }
+}
 
-  if (tapCount >= TAPS_PER_POINT) {
-    el.classList.remove('active');
-    el.classList.add('done');
-    currentPointIdx++;
+// ===== TAPPING ROUND =====
+function startRound(){
+  pi=0;tc=0;paused=false;
+  document.getElementById('btnPause').textContent='⏸ Pause';
+  activatePoint();
+  show('tap');
+}
 
-    if (currentPointIdx >= points.length) {
-      roundsDone++;
-      if (roundsDone < roundsTotal) {
-        currentPointIdx = 0;
-        showBreathingBreak(() => activatePoint());
-      } else {
-        finishSession();
+function activatePoint(){
+  tc=0;
+  document.getElementById('tapNum').textContent='0';
+  // Update points
+  document.querySelectorAll('.tp').forEach(el=>{
+    el.classList.remove('act','done','dim');
+    const p=el.dataset.p;
+    if(mode==='quick'&&!QUICK_PTS.includes(p)){el.classList.add('dim');return}
+    const idx=pts.indexOf(p);
+    if(idx<pi)el.classList.add('done');
+    else if(idx===pi)el.classList.add('act');
+  });
+  const cp=pts[pi];
+  document.getElementById('tapName').textContent=NAMES[cp];
+  document.getElementById('tapInst').textContent=INST[cp];
+  // Affirmation: first round = reminder phrase, later = positive
+  if(rd===0){
+    document.getElementById('tapAff').textContent='"'+REMINDERS[setupIdx%REMINDERS.length]+'"';
+  }else{
+    document.getElementById('tapAff').textContent='"'+POSITIVES[Math.floor(Math.random()*POSITIVES.length)]+'"';
+  }
+  const total=pts.length*rounds;
+  const done=rd*pts.length+pi;
+  document.getElementById('tapPinfo').textContent=`Point ${done+1} of ${total}${rounds>1?' · Round '+(rd+1)+'/'+rounds:''}`;
+  document.getElementById('tapFill').style.width=(done/total*100)+'%';
+}
+
+function doTap(el){
+  if(paused)return;
+  if(el.dataset.p!==pts[pi])return;
+  tc++;totalTaps++;
+  document.getElementById('tapNum').textContent=tc;
+  tapSnd();vb(25);
+  el.style.transform='scale(1.25)';setTimeout(()=>el.style.transform='',120);
+  if(tc>=TAPS_NEEDED){
+    el.classList.remove('act');el.classList.add('done');
+    pi++;
+    if(pi>=pts.length){
+      // Round done
+      rd++;
+      if(rd<rounds){
+        // Breathing break then re-rate SUDS
+        breathBreak(()=>showSuds(true));
+      }else{
+        // All done
+        breathBreak(()=>finishSession());
       }
-    } else {
-      // Brief breathing break every 3 points
-      if (currentPointIdx % 3 === 0 && mode !== 'quick') {
-        showBreathingBreak(() => activatePoint());
-      } else {
+    }else{
+      // Breathing break every 3 points (full/ext only)
+      if(pi%3===0&&mode!=='quick'){
+        breathBreak(()=>{activatePoint();show('tap')});
+      }else{
         activatePoint();
       }
     }
   }
 }
 
-function showBreathingBreak(callback) {
-  document.getElementById('tapScreen').style.display = 'none';
-  document.getElementById('breathScreen').style.display = 'flex';
-  const orb = document.getElementById('breathOrb');
-  const label = document.getElementById('breathLabel');
+function togglePause(){
+  paused=!paused;
+  document.getElementById('btnPause').textContent=paused?'▶ Resume':'⏸ Pause';
+}
+function endEarly(){show('home')}
 
-  let step = 0;
-  const breathCycle = () => {
-    if (step === 0) { orb.classList.add('expand'); label.textContent = 'Breathe in...'; }
-    else if (step === 1) { label.textContent = 'Hold...'; }
-    else if (step === 2) { orb.classList.remove('expand'); label.textContent = 'Breathe out...'; }
-    else if (step === 3) { label.textContent = 'Relax...'; }
-    step++;
-    if (step <= 4) {
-      setTimeout(breathCycle, 1500);
-    } else {
-      document.getElementById('breathScreen').style.display = 'none';
-      document.getElementById('tapScreen').style.display = 'flex';
-      callback();
+// ===== BREATHING =====
+function breathBreak(cb){
+  show('breathe');
+  const orb=document.getElementById('brOrb');
+  const lbl=document.getElementById('brLabel');
+  let s=0;
+  const cyc=()=>{
+    if(s===0){orb.className='br-orb in';lbl.textContent='Breathe in...'}
+    else if(s===1){lbl.textContent='Hold...'}
+    else if(s===2){orb.className='br-orb out';lbl.textContent='Breathe out...'}
+    else if(s===3){lbl.textContent='Relax...'}
+    s++;
+    if(s<=4)setTimeout(cyc,1800);
+    else cb();
+  };cyc();
+}
+
+// ===== ROUND END RE-RATE =====
+function reRate(){
+  const v=parseInt(document.getElementById('reNext').dataset.val);
+  sudsScores.push(v);
+  // Another round — new setup statement
+  showSetup();
+}
+
+// ===== FINISH =====
+function finishSession(){
+  // Final SUDS if we had initial
+  if(mode!=='quick'&&sudsScores.length>0){
+    // Show final rating inline on done screen
+    const before=sudsScores[0];
+    const after=sudsScores.length>1?sudsScores[sudsScores.length-1]:before;
+    const diff=before-after;
+    let msg='';
+    if(diff>=3)msg='Huge drop! The tapping really worked 💚';
+    else if(diff>=1)msg='Nice improvement — keep practicing 👍';
+    else if(diff===0)msg='Same level — try another round or a different setup phrase';
+    else msg='That\'s okay — sometimes feelings shift slowly';
+
+    document.getElementById('dnSub').textContent=msg;
+    let scHtml='<div class="dn-sc"><div class="n" style="color:#e74c3c">'+before+'</div><div class="l">Before</div></div>';
+    scHtml+='<div class="dn-sc"><div class="n" style="font-size:1.5em;color:rgba(255,255,255,.3)">→</div><div class="l"></div></div>';
+    scHtml+='<div class="dn-sc"><div class="n" style="color:#2ecc71">'+after+'</div><div class="l">After</div></div>';
+    if(sudsScores.length>2){
+      scHtml+='<div class="dn-sc" style="margin-left:16px"><div class="l" style="font-size:.75em;color:rgba(255,255,255,.3)">'+sudsScores.join(' → ')+'</div></div>';
     }
-  };
-  breathCycle();
+    document.getElementById('dnScores').innerHTML=scHtml;
+  }else{
+    document.getElementById('dnSub').textContent='Quick calm complete — you did great!';
+    document.getElementById('dnScores').innerHTML='';
+  }
+
+  const modeNames={quick:'Quick Calm',full:'Full Round',ext:'Deep Session'};
+  document.getElementById('dnStat').textContent=`${modeNames[mode]} · ${totalTaps} taps · ${pts.length*rounds} points · ${rounds} round${rounds>1?'s':''}`;
+  doneSnd();vb([80,30,80,30,150]);
+  show('done');
 }
-
-function finishSession() {
-  document.getElementById('tapScreen').style.display = 'none';
-  playDoneSound();
-  vibrate([100,50,100,50,200]);
-
-  const names = {quick:'Quick Tap',full:'Full Round',extended:'Extended Session'};
-  document.getElementById('doneMsg').textContent = `You completed ${names[mode]}!`;
-  document.getElementById('doneStat').textContent = `${totalTaps} taps • ${points.length * roundsTotal} points`;
-  document.getElementById('doneScreen').style.display = 'block';
-}
-
-function togglePause() {
-  paused = !paused;
-  document.getElementById('btnPause').textContent = paused ? '▶ Resume' : '⏸ Pause';
-}
-
-function stopSession() {
-  document.getElementById('tapScreen').style.display = 'none';
-  document.getElementById('breathScreen').style.display = 'none';
-  document.getElementById('startScreen').classList.remove('hidden');
-}
-
-function resetAll() {
-  document.getElementById('doneScreen').style.display = 'none';
-  document.getElementById('startScreen').classList.remove('hidden');
-}
-
-// Unlock audio on first touch
-document.addEventListener('touchstart', initAudio, {once:true});
-document.addEventListener('click', initAudio, {once:true});
 </script>
 </body>
 </html>
