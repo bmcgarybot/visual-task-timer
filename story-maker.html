@@ -210,6 +210,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
       </div>
       <img class="hidden" id="faceImg">
     </div>
+    <button id="skipBtn" onclick="delPage()" style="position:absolute;top:10px;right:10px;z-index:20;background:rgba(0,0,0,0.55);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:4px;backdrop-filter:blur(4px)">&#10060; Skip this step</button>
     <div class="text-overlay">
       <div class="stxt" id="sText" contenteditable="true" data-ph="Tap to write story text..."></div>
     </div>
@@ -258,6 +259,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <div class="eopt" onclick="shareData()"><span class="ei">&#128279;</span><div><h3>Share Story</h3><p>Copy story data to clipboard</p></div></div>
     <button class="btn bo" onclick="closeModal()" style="margin-top:12px;width:100%">Cancel</button>
   </div>
+</div>
+
+<!-- REVIEW STEPS MODAL (shows all template steps, lets parent uncheck ones to skip) -->
+<div class="mov" id="reviewModal">
+  <div class="mod" id="reviewContent" style="max-height:80vh;overflow-y:auto"></div>
 </div>
 
 <!-- PHOTO PICKER MODAL -->
@@ -734,9 +740,46 @@ function renderTmpls(){
 
 function loadTmpl(cat,idx){
   let t=T[cat][idx];
-  story={name:t.name,pages:t.pages.map(p=>({scene:null,face:null,text:p.text,prompt:p.scene_prompt,faceX:50,faceY:20,faceSize:100,showFace:true})),created:Date.now()};
+  // Show review screen so parent can uncheck steps that don't apply
+  window._pendingTmpl = t;
+  let html = `<h2>Review Steps</h2>`;
+  html += `<p style="font-size:13px;color:var(--txtL);margin-bottom:12px">Uncheck any steps that don't apply to your child:</p>`;
+  html += `<div style="margin-bottom:16px">`;
+  t.pages.forEach((p,i) => {
+    html += `<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 8px;border-bottom:1px solid #F1F3F5;cursor:pointer;font-size:14px;line-height:1.3">
+      <input type="checkbox" checked data-step="${i}" style="margin-top:2px;width:20px;height:20px;flex-shrink:0;accent-color:var(--pri)">
+      <span><strong>${i+1}.</strong> ${p.text}</span>
+    </label>`;
+  });
+  html += `</div>`;
+  html += `<div style="display:flex;gap:8px">`;
+  html += `<button class="btn bo" onclick="closeReview()" style="flex:1">Cancel</button>`;
+  html += `<button class="btn bp" onclick="confirmTmpl()" style="flex:2">Use ${t.pages.length} steps &#10132;</button>`;
+  html += `</div>`;
+  document.getElementById('reviewContent').innerHTML = html;
+  document.getElementById('reviewModal').classList.add('vis');
+  // Update button count when checkboxes change
+  document.querySelectorAll('#reviewContent input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      let ct = document.querySelectorAll('#reviewContent input[type=checkbox]:checked').length;
+      document.querySelector('#reviewContent .bp').textContent = `Use ${ct} steps \u{2794}`;
+    });
+  });
+}
+
+function closeReview(){ document.getElementById('reviewModal').classList.remove('vis'); }
+
+function confirmTmpl(){
+  let t = window._pendingTmpl;
+  let checks = document.querySelectorAll('#reviewContent input[type=checkbox]');
+  let kept = [];
+  checks.forEach((cb,i) => { if(cb.checked) kept.push(t.pages[i]); });
+  if(!kept.length){ toast('Keep at least one step!'); return; }
+  story = {name:t.name, pages:kept.map(p=>({scene:null,face:null,text:p.text,prompt:p.scene_prompt,faceX:50,faceY:20,faceSize:100,showFace:true})), created:Date.now()};
   pgIdx=0;
+  closeReview();
   goTo('editorScreen');
+  toast(`Story created with ${kept.length} steps`);
 }
 
 function startBlank(){
