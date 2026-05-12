@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Story Maker - Social Stories for Kids</title>
+<style>
+:root {
+  --primary: #6C63FF;
+  --primary-dark: #5A52D5;
+  --accent: #FF6B6B;
+  --green: #51CF66;
+  --bg: #F8F9FF;
+  --card: #FFFFFF;
+  --text: #2D3436;
+  --text-light: #636E72;
+  --radius: 16px;
+  --shadow: 0 4px 20px rgba(108,99,255,0.12);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+.header {
+  background:linear-gradient(135deg,var(--primary),#8B83FF);
+  color:white; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(108,99,255,0.3);
+}
+.header h1 { font-size:20px; }
+.header .sub { font-size:12px; opacity:0.85; }
+.back-btn {
+  background:rgba(255,255,255,0.2); border:none; color:white; width:36px; height:36px;
+  border-radius:50%; font-size:18px; cursor:pointer; display:none; align-items:center; justify-content:center;
+}
+.back-btn.vis { display:flex; }
+
+.screen { display:none; padding:20px; max-width:800px; margin:0 auto; }
+.screen.active { display:block; }
+
+.welcome-card {
+  background:var(--card); border-radius:var(--radius); padding:30px 24px;
+  text-align:center; box-shadow:var(--shadow); margin-bottom:24px;
+}
+.welcome-card .emoji { font-size:48px; margin-bottom:12px; }
+.welcome-card h2 { font-size:22px; margin-bottom:8px; }
+.welcome-card p { color:var(--text-light); font-size:14px; line-height:1.5; }
+
+.action-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+.action-card {
+  background:var(--card); border-radius:var(--radius); padding:20px 16px; text-align:center;
+  box-shadow:var(--shadow); cursor:pointer; transition:transform 0.2s; border:2px solid transparent;
+}
+.action-card:hover { transform:translateY(-2px); }
+.action-card .icon { font-size:36px; margin-bottom:8px; }
+.action-card h3 { font-size:14px; font-weight:600; margin-bottom:4px; }
+.action-card p { font-size:11px; color:var(--text-light); }
+
+.section-title { font-size:18px; font-weight:700; margin-bottom:16px; }
+
+.cat-tabs { display:flex; gap:8px; overflow-x:auto; padding-bottom:12px; margin-bottom:16px; }
+.cat-tab {
+  background:var(--card); border:2px solid #E9ECEF; border-radius:24px; padding:8px 16px;
+  font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; transition:all 0.2s;
+}
+.cat-tab.active { background:var(--primary); color:white; border-color:var(--primary); }
+
+.tmpl-card {
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); cursor:pointer;
+  display:flex; align-items:center; gap:16px; padding:16px; margin-bottom:12px; transition:transform 0.2s;
+}
+.tmpl-card:hover { transform:translateY(-2px); }
+.tmpl-icon { width:64px; height:64px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:32px; flex-shrink:0; }
+.tmpl-info h3 { font-size:15px; margin-bottom:4px; }
+.tmpl-info p { font-size:12px; color:var(--text-light); }
+.tmpl-info .cnt { font-size:11px; color:var(--primary); font-weight:600; margin-top:4px; }
+
+.toolbar {
+  background:var(--card); border-radius:var(--radius); padding:12px; display:flex; gap:8px;
+  margin-bottom:16px; box-shadow:var(--shadow); overflow-x:auto;
+}
+.tbtn {
+  background:#F1F3F5; border:none; border-radius:10px; padding:10px 14px; font-size:12px;
+  font-weight:600; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:6px;
+}
+.tbtn:hover { background:#E9ECEF; }
+
+.canvas {
+  background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow);
+  aspect-ratio:4/3; position:relative; overflow:hidden; margin-bottom:16px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.canvas .bg-icon { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:120px; opacity:0.12; pointer-events:none; }
+.canvas .content { position:relative; z-index:2; text-align:center; padding:24px; width:100%; }
+.char-circle {
+  width:120px; height:120px; border-radius:50%; background:#E9ECEF; margin:0 auto 16px;
+  display:flex; align-items:center; justify-content:center; font-size:48px;
+  border:3px dashed #CED4DA; cursor:pointer; overflow:hidden; position:relative; transition:all 0.2s;
+}
+.char-circle:hover { border-color:var(--primary); background:#F1F3FF; }
+.char-circle img { width:100%; height:100%; object-fit:cover; }
+.char-circle .lbl {
+  position:absolute; bottom:0; left:0; right:0; background:rgba(108,99,255,0.85);
+  color:white; font-size:9px; padding:2px; font-weight:600;
+}
+.stext {
+  font-size:22px; font-weight:700; line-height:1.4; max-width:90%; margin:0 auto; outline:none; padding:4px;
+  border-bottom:2px dashed transparent;
+}
+.stext:focus { border-bottom-color:var(--primary); }
+
+.pnav { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:16px; }
+.pnav-btn {
+  background:var(--primary); color:white; border:none; width:40px; height:40px;
+  border-radius:50%; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.pnav-btn:disabled { background:#DEE2E6; cursor:not-allowed; }
+.plabel { font-size:13px; font-weight:600; color:var(--text-light); min-width:80px; text-align:center; }
+
+.bactions { display:flex; gap:10px; padding:16px 0; }
+.btn {
+  flex:1; padding:14px; border:none; border-radius:12px; font-size:15px; font-weight:700;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s;
+}
+.btn-p { background:var(--primary); color:white; }
+.btn-g { background:var(--green); color:white; }
+.btn-a { background:var(--accent); color:white; }
+.btn-o { background:white; color:var(--primary); border:2px solid var(--primary); }
+
+.colors { display:flex; gap:10px; padding:12px 0; flex-wrap:wrap; }
+.cswatch {
+  width:36px; height:36px; border-radius:50%; cursor:pointer; border:3px solid transparent; transition:all 0.2s;
+}
+.cswatch.active { border-color:var(--text); transform:scale(1.15); }
+
+.modal-ov {
+  position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200;
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.modal-ov.vis { display:flex; }
+.modal { background:white; border-radius:var(--radius); padding:24px; max-width:400px; width:100%; }
+.modal h2 { font-size:20px; margin-bottom:16px; text-align:center; }
+.exp-opt {
+  background:#F8F9FA; border-radius:12px; padding:16px; margin-bottom:10px;
+  cursor:pointer; display:flex; align-items:center; gap:12px; transition:all 0.2s;
+}
+.exp-opt:hover { background:#E9ECEF; }
+.exp-opt .ei { font-size:28px; }
+.exp-opt h3 { font-size:14px; }
+.exp-opt p { font-size:11px; color:var(--text-light); }
+
+.toast {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px);
+  background:var(--text); color:white; padding:12px 24px; border-radius:12px;
+  font-size:14px; font-weight:600; z-index:300; transition:transform 0.3s; white-space:nowrap;
+}
+.toast.vis { transform:translateX(-50%) translateY(0); }
+
+.saved-item {
+  background:var(--card); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow);
+  margin-bottom:12px; display:flex; align-items:center; gap:14px; cursor:pointer;
+}
+.saved-item .thumb {
+  width:56px; height:56px; border-radius:10px; display:flex; align-items:center;
+  justify-content:center; font-size:28px; flex-shrink:0;
+}
+.saved-item h3 { font-size:14px; margin-bottom:2px; }
+.saved-item p { font-size:12px; color:var(--text-light); }
+.del-btn {
+  margin-left:auto; background:#F1F3F5; border:none; width:32px; height:32px;
+  border-radius:8px; cursor:pointer; font-size:14px;
+}
+
+.hidden { display:none; }
+@media(max-width:480px) {
+  .stext { font-size:18px; }
+  .char-circle { width:90px; height:90px; font-size:36px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <button class="back-btn" id="backBtn" onclick="goBack()">&#8592;</button>
+  <div><h1>&#128214; Story Maker</h1><div class="sub">Social Stories for Kids</div></div>
+  <div style="width:36px"></div>
+</div>
+
+<div class="screen active" id="homeScreen">
+  <div class="welcome-card">
+    <div class="emoji">&#128214;&#10024;</div>
+    <h2>Social Story Maker</h2>
+    <p>Create personalized visual stories to help your child understand routines, emotions, and social situations with their own face in the story!</p>
+  </div>
+  <div class="action-grid">
+    <div class="action-card" onclick="showScreen('tmplScreen')"><div class="icon">&#127912;</div><h3>New Story</h3><p>Start from a template</p></div>
+    <div class="action-card" onclick="startBlank()"><div class="icon">&#128221;</div><h3>Blank Story</h3><p>Build from scratch</p></div>
+    <div class="action-card" onclick="showScreen('savedScreen')"><div class="icon">&#128218;</div><h3>My Stories</h3><p id="sCnt">0 saved</p></div>
+    <div class="action-card" onclick="showScreen('photoScreen')"><div class="icon">&#128247;</div><h3>My Photos</h3><p>Manage faces</p></div>
+  </div>
+</div>
+
+<div class="screen" id="tmplScreen">
+  <h2 class="section-title">Choose a Template</h2>
+  <div class="cat-tabs" id="catTabs"></div>
+  <div id="tmplGrid"></div>
+</div>
+
+<div class="screen" id="photoScreen">
+  <h2 class="section-title">My Photos</h2>
+  <p style="color:var(--text-light);margin-bottom:16px;font-size:14px;">Upload photos of your child to use in stories. Photos stay on your device only.</p>
+  <div class="bactions" style="padding-top:0"><button class="btn btn-p" onclick="document.getElementById('photoUp').click()">&#128247; Add Photo</button></div>
+  <input type="file" id="photoUp" class="hidden" accept="image/*" multiple onchange="handlePhotoUp(event)">
+  <div id="photoGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+</div>
+
+<div class="screen" id="savedScreen">
+  <h2 class="section-title">My Stories</h2>
+  <div id="savedList"></div>
+  <div id="emptyState" style="text-align:center;padding:40px 0;color:var(--text-light);"><div style="font-size:48px;margin-bottom:12px;">&#128218;</div><p>No stories yet!</p></div>
+</div>
+
+<div class="screen" id="editorScreen">
+  <div class="toolbar">
+    <button class="tbtn" onclick="addPage()">&#10133; Page</button>
+    <button class="tbtn" onclick="delPage()">&#128465; Delete</button>
+    <button class="tbtn" onclick="toggleColors()">&#127912; Color</button>
+    <button class="tbtn" onclick="cycleEmoji()">&#128522; Character</button>
+    <button class="tbtn" onclick="toggleSize()">&#128292; Size</button>
+  </div>
+  <div id="colorPanel" style="display:none">
+    <div class="colors">
+      <div class="cswatch" style="background:#D0EBFF" onclick="setColor('#D0EBFF')"></div>
+      <div class="cswatch" style="background:#D3F9D8" onclick="setColor('#D3F9D8')"></div>
+      <div class="cswatch" style="background:#FFF3BF" onclick="setColor('#FFF3BF')"></div>
+      <div class="cswatch" style="background:#FFD6E0" onclick="setColor('#FFD6E0')"></div>
+      <div class="cswatch" style="background:#E5DBFF" onclick="setColor('#E5DBFF')"></div>
+      <div class="cswatch" style="background:#FFE0CC" onclick="setColor('#FFE0CC')"></div>
+      <div class="cswatch" style="background:#FFFFFF" onclick="setColor('#FFFFFF')"></div>
+      <div class="cswatch" style="background:#C3FAE8" onclick="setColor('#C3FAE8')"></div>
+    </div>
+  </div>
+  <div class="canvas" id="canvas">
+    <div class="bg-icon" id="bgIcon"></div>
+    <div class="content">
+      <div class="char-circle" id="charCircle" onclick="pickPhoto()"><span id="charE">&#129490;</span></div>
+      <div class="stext" id="sText" contenteditable="true">Tap here to write your story text</div>
+    </div>
+  </div>
+  <div class="pnav">
+    <button class="pnav-btn" onclick="prevPg()">&#8249;</button>
+    <span class="plabel" id="pgLabel"></span>
+    <button class="pnav-btn" onclick="nextPg()">&#8250;</button>
+  </div>
+  <div class="bactions">
+    <button class="btn btn-o" onclick="saveStory()">&#128190; Save</button>
+    <button class="btn btn-p" onclick="preview()">&#9654; Preview</button>
+    <button class="btn btn-g" onclick="showExport()">&#128228; Export</button>
+  </div>
+</div>
+
+<div class="screen" id="prevScreen" style="padding:0;max-width:100%;">
+  <div id="prevBox" style="width:100%;height:calc(100vh - 60px);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:background 0.3s;">
+    <div style="position:relative;z-index:2;text-align:center;padding:24px;">
+      <div id="prevChar" style="width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,0.3);margin:0 auto 20px;display:flex;align-items:center;justify-content:center;font-size:64px;overflow:hidden;"></div>
+      <div id="prevText" style="font-size:28px;font-weight:700;line-height:1.4;max-width:80%;margin:0 auto;"></div>
+    </div>
+    <div style="position:absolute;bottom:24px;display:flex;gap:16px;z-index:3;">
+      <button class="pnav-btn" onclick="prevPrev()" style="width:50px;height:50px;font-size:24px;">&#8249;</button>
+      <button class="btn btn-a" onclick="showScreen('editorScreen')" style="flex:none;padding:14px 28px;">&#9998; Edit</button>
+      <button class="pnav-btn" onclick="nextPrev()" style="width:50px;height:50px;font-size:24px;">&#8250;</button>
+    </div>
+    <div id="prevProg" style="position:absolute;bottom:80px;font-size:13px;color:var(--text-light);font-weight:600;z-index:3;"></div>
+  </div>
+</div>
+
+<div class="modal-ov" id="exportModal">
+  <div class="modal">
+    <h2>&#128228; Export Story</h2>
+    <div class="exp-opt" onclick="exportPrint()"><span class="ei">&#128424;</span><div><h3>Print Story</h3><p>Print all pages to make a book</p></div></div>
+    <div class="exp-opt" onclick="exportSlideshow()"><span class="ei">&#9654;</span><div><h3>Auto Slideshow</h3><p>Play story automatically (5s per page)</p></div></div>
+    <div class="exp-opt" onclick="shareLink()"><span class="ei">&#128279;</span><div><h3>Copy Story Data</h3><p>Copy to clipboard to share</p></div></div>
+    <button class="btn btn-o" onclick="closeExport()" style="margin-top:12px;width:100%;">Cancel</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="charPhotoIn" class="hidden" accept="image/*" onchange="handleCharPhoto(event)">
+
+<script>
+// ===== TEMPLATES =====
+const T = {
+  "Daily Routines": [
+    { name:"Going to the Bathroom", icon:"\u{1F6BD}", color:"#D0EBFF", pages:[
+      {e:"\u{1F9D2}",t:"Sometimes I need to go to the bathroom.",bg:"#D0EBFF"},
+      {e:"\u{1F6B6}",t:"I walk to the bathroom.",bg:"#D3F9D8"},
+      {e:"\u{1F6AA}",t:"I close the door for privacy.",bg:"#E5DBFF"},
+      {e:"\u{1F9FB}",t:"I use the toilet and wipe.",bg:"#FFF3BF"},
+      {e:"\u{1F6BF}",t:"I flush the toilet.",bg:"#D0EBFF"},
+      {e:"\u{1F9FC}",t:"I wash my hands with soap and water.",bg:"#C3FAE8"},
+      {e:"\u{2B50}",t:"Great job! I did it all by myself!",bg:"#FFD6E0"}
+    ]},
+    { name:"Morning Routine", icon:"\u{1F305}", color:"#FFF3BF", pages:[
+      {e:"\u{1F634}",t:"When I wake up, it is time to start my day.",bg:"#FFF3BF"},
+      {e:"\u{1FAA5}",t:"First, I brush my teeth.",bg:"#D0EBFF"},
+      {e:"\u{1F455}",t:"Then I get dressed.",bg:"#D3F9D8"},
+      {e:"\u{1F963}",t:"I eat my breakfast.",bg:"#FFE0CC"},
+      {e:"\u{1F392}",t:"I pack my backpack.",bg:"#E5DBFF"},
+      {e:"\u{2B50}",t:"I am ready for a great day!",bg:"#FFD6E0"}
+    ]},
+    { name:"Bedtime Routine", icon:"\u{1F319}", color:"#E5DBFF", pages:[
+      {e:"\u{1F319}",t:"It is getting dark. Time to get ready for bed.",bg:"#E5DBFF"},
+      {e:"\u{1F6C1}",t:"I take a bath or shower.",bg:"#D0EBFF"},
+      {e:"\u{1F9F4}",t:"I put on my pajamas.",bg:"#FFD6E0"},
+      {e:"\u{1FAA5}",t:"I brush my teeth.",bg:"#C3FAE8"},
+      {e:"\u{1F4DA}",t:"We read a story together.",bg:"#FFF3BF"},
+      {e:"\u{1F634}",t:"I close my eyes and go to sleep. Goodnight!",bg:"#E5DBFF"}
+    ]},
+    { name:"Getting Dressed", icon:"\u{1F455}", color:"#D3F9D8", pages:[
+      {e:"\u{1F455}",t:"It is time to get dressed.",bg:"#D3F9D8"},
+      {e:"\u{1FA72}",t:"First, I put on my underwear.",bg:"#D0EBFF"},
+      {e:"\u{1F456}",t:"Next, I put on my pants.",bg:"#FFF3BF"},
+      {e:"\u{1F455}",t:"Then my shirt goes on.",bg:"#E5DBFF"},
+      {e:"\u{1F9E6}",t:"I put on my socks.",bg:"#FFE0CC"},
+      {e:"\u{1F45F}",t:"Last, I put on my shoes.",bg:"#D3F9D8"},
+      {e:"\u{2B50}",t:"I got dressed! I look great!",bg:"#FFD6E0"}
+    ]}
+  ],
+  "Going Places": [
+    { name:"Going to the Doctor", icon:"\u{1F3E5}", color:"#D0EBFF", pages:[
+      {e:"\u{1F3E5}",t:"Today I am going to the doctor.",bg:"#D0EBFF"},
+      {e:"\u{1F697}",t:"We drive to the doctor's office.",bg:"#FFF3BF"},
+      {e:"\u{1FA91}",t:"I sit in the waiting room.",bg:"#E5DBFF"},
+      {e:"\u{1F469}\u{200D}\u{2695}\u{FE0F}",t:"The doctor checks my body to keep me healthy.",bg:"#D3F9D8"},
+      {e:"\u{1F4AA}",t:"I try to stay calm and brave.",bg:"#FFE0CC"},
+      {e:"\u{2B50}",t:"I did it! The doctor helps me stay healthy.",bg:"#FFD6E0"}
+    ]},
+    { name:"Going to the Store", icon:"\u{1F6D2}", color:"#D3F9D8", pages:[
+      {e:"\u{1F6D2}",t:"Today we are going to the store.",bg:"#D3F9D8"},
+      {e:"\u{1F697}",t:"We drive to the store.",bg:"#D0EBFF"},
+      {e:"\u{1F6D2}",t:"I can sit in the cart or walk beside it.",bg:"#FFF3BF"},
+      {e:"\u{1F34E}",t:"We look for the things on our list.",bg:"#FFE0CC"},
+      {e:"\u{1F91A}",t:"I keep my hands to myself.",bg:"#E5DBFF"},
+      {e:"\u{2B50}",t:"Great job shopping! We can go home now.",bg:"#FFD6E0"}
+    ]},
+    { name:"Getting a Haircut", icon:"\u{2702}\u{FE0F}", color:"#FFE0CC", pages:[
+      {e:"\u{2702}\u{FE0F}",t:"Today I am getting a haircut.",bg:"#FFE0CC"},
+      {e:"\u{1FA91}",t:"I sit in a special chair.",bg:"#D0EBFF"},
+      {e:"\u{1F9E3}",t:"They put a cape on me to keep hair off my clothes.",bg:"#E5DBFF"},
+      {e:"\u{2702}\u{FE0F}",t:"The barber cuts my hair. It might tickle!",bg:"#FFF3BF"},
+      {e:"\u{1F4AA}",t:"I try to sit still.",bg:"#D3F9D8"},
+      {e:"\u{2B50}",t:"My haircut looks amazing!",bg:"#FFD6E0"}
+    ]},
+    { name:"Riding the School Bus", icon:"\u{1F68C}", color:"#FFF3BF", pages:[
+      {e:"\u{1F68C}",t:"The school bus is coming!",bg:"#FFF3BF"},
+      {e:"\u{1F6B6}",t:"I wait at the bus stop.",bg:"#D0EBFF"},
+      {e:"\u{1F44B}",t:"When the bus stops, I get on.",bg:"#D3F9D8"},
+      {e:"\u{1FA91}",t:"I find a seat and sit down.",bg:"#E5DBFF"},
+      {e:"\u{1F910}",t:"I use a quiet voice on the bus.",bg:"#FFE0CC"},
+      {e:"\u{2B50}",t:"We are here! Time for school!",bg:"#FFD6E0"}
+    ]}
+  ],
+  "Feelings": [
+    { name:"When I Feel Angry", icon:"\u{1F620}", color:"#FFD6E0", pages:[
+      {e:"\u{1F620}",t:"Sometimes I feel angry.",bg:"#FFD6E0"},
+      {e:"\u{1F975}",t:"My face might get hot and my fists might clench.",bg:"#FFE0CC"},
+      {e:"\u{1F624}",t:"It is okay to feel angry.",bg:"#FFF3BF"},
+      {e:"\u{1F4A8}",t:"I can take deep breaths to calm down.",bg:"#D0EBFF"},
+      {e:"\u{1F5E3}\u{FE0F}",t:"I can use my words to say how I feel.",bg:"#E5DBFF"},
+      {e:"\u{1F60C}",t:"When I calm down, I feel better.",bg:"#D3F9D8"}
+    ]},
+    { name:"When I Feel Worried", icon:"\u{1F630}", color:"#E5DBFF", pages:[
+      {e:"\u{1F630}",t:"Sometimes I feel worried.",bg:"#E5DBFF"},
+      {e:"\u{1F4AD}",t:"My tummy might feel funny.",bg:"#FFD6E0"},
+      {e:"\u{1F44C}",t:"It is okay to feel worried sometimes.",bg:"#FFF3BF"},
+      {e:"\u{1F4A8}",t:"I can take slow, deep breaths.",bg:"#D0EBFF"},
+      {e:"\u{1F9F8}",t:"I can hug something soft.",bg:"#FFE0CC"},
+      {e:"\u{1F917}",t:"I can tell a grown-up how I feel.",bg:"#D3F9D8"}
+    ]},
+    { name:"Waiting My Turn", icon:"\u{270B}", color:"#FFF3BF", pages:[
+      {e:"\u{270B}",t:"Sometimes I need to wait my turn.",bg:"#FFF3BF"},
+      {e:"\u{1F614}",t:"Waiting can be hard.",bg:"#FFD6E0"},
+      {e:"\u{1F4A8}",t:"I can take deep breaths while I wait.",bg:"#D0EBFF"},
+      {e:"\u{1F3B5}",t:"I can hum a song quietly.",bg:"#E5DBFF"},
+      {e:"\u{1F603}",t:"When it is my turn, it feels great!",bg:"#D3F9D8"},
+      {e:"\u{2B50}",t:"I am good at waiting!",bg:"#FFE0CC"}
+    ]}
+  ],
+  "Social Skills": [
+    { name:"Saying Hello", icon:"\u{1F44B}", color:"#D3F9D8", pages:[
+      {e:"\u{1F44B}",t:"When I see someone I know, I can say hello.",bg:"#D3F9D8"},
+      {e:"\u{1F642}",t:"I can wave my hand.",bg:"#D0EBFF"},
+      {e:"\u{1F441}\u{FE0F}",t:"I can look at their eyes.",bg:"#FFF3BF"},
+      {e:"\u{1F5E3}\u{FE0F}",t:"I say: Hi! How are you?",bg:"#E5DBFF"},
+      {e:"\u{1F60A}",t:"Saying hello makes people happy!",bg:"#FFD6E0"},
+      {e:"\u{2B50}",t:"I am good at greeting people!",bg:"#FFE0CC"}
+    ]},
+    { name:"Sharing with Friends", icon:"\u{1F91D}", color:"#D0EBFF", pages:[
+      {e:"\u{1F91D}",t:"Sometimes my friend wants to play with my toy.",bg:"#D0EBFF"},
+      {e:"\u{1F614}",t:"Sharing can feel hard.",bg:"#FFD6E0"},
+      {e:"\u{1F4AD}",t:"But sharing makes my friend happy.",bg:"#FFF3BF"},
+      {e:"\u{1F91D}",t:"I can share for a little while.",bg:"#D3F9D8"},
+      {e:"\u{1F603}",t:"Then I can have it back.",bg:"#E5DBFF"},
+      {e:"\u{2B50}",t:"Sharing makes me a good friend!",bg:"#FFE0CC"}
+    ]},
+    { name:"Playing with Others", icon:"\u{1F3C3}", color:"#FFE0CC", pages:[
+      {e:"\u{1F3C3}",t:"I like to play with other kids.",bg:"#FFE0CC"},
+      {e:"\u{1F5E3}\u{FE0F}",t:"I can ask: Can I play too?",bg:"#D0EBFF"},
+      {e:"\u{1F442}",t:"I listen to the rules of the game.",bg:"#D3F9D8"},
+      {e:"\u{1F91D}",t:"I take turns with my friends.",bg:"#FFF3BF"},
+      {e:"\u{1F603}",t:"If I lose, I say good game!",bg:"#E5DBFF"},
+      {e:"\u{2B50}",t:"Playing together is fun!",bg:"#FFD6E0"}
+    ]}
+  ],
+  "Safety": [
+    { name:"Fire Drill at School", icon:"\u{1F6A8}", color:"#FFD6E0", pages:[
+      {e:"\u{1F6A8}",t:"Sometimes we have a fire drill at school.",bg:"#FFD6E0"},
+      {e:"\u{1F514}",t:"A loud bell rings. This is okay.",bg:"#FFE0CC"},
+      {e:"\u{1F6B6}",t:"I stand up and walk in line.",bg:"#D0EBFF"},
+      {e:"\u{1F910}",t:"I use a quiet voice.",bg:"#FFF3BF"},
+      {e:"\u{1F3EB}",t:"We go outside and wait together.",bg:"#D3F9D8"},
+      {e:"\u{2B50}",t:"When the drill is over, we go back inside. I am safe!",bg:"#E5DBFF"}
+    ]},
+    { name:"Stranger Safety", icon:"\u{1F6E1}\u{FE0F}", color:"#FFF3BF", pages:[
+      {e:"\u{1F6E1}\u{FE0F}",t:"A stranger is someone I do not know.",bg:"#FFF3BF"},
+      {e:"\u{1F645}",t:"I do not go with strangers.",bg:"#FFD6E0"},
+      {e:"\u{1F645}",t:"I do not take things from strangers.",bg:"#FFE0CC"},
+      {e:"\u{1F5E3}\u{FE0F}",t:"If a stranger talks to me, I find a safe grown-up.",bg:"#D0EBFF"},
+      {e:"\u{1F46A}",t:"My safe people are my family and teachers.",bg:"#D3F9D8"},
+      {e:"\u{2B50}",t:"I know how to stay safe!",bg:"#E5DBFF"}
+    ]}
+  ]
+};
+
+// ===== STATE =====
+let story = { name:"", pages:[], created:null };
+let pgIdx = 0;
+let prevIdx = 0;
+let photos = JSON.parse(localStorage.getItem('sm_photos') || '[]');
+let saved = JSON.parse(localStorage.getItem('sm_stories') || '[]');
+let screenStack = ['homeScreen'];
+const EMOJIS = ["\u{1F9D2}","\u{1F466}","\u{1F467}","\u{1F476}","\u{1F9D1}","\u{1F468}","\u{1F469}","\u{1F474}","\u{1F475}","\u{1F934}","\u{1F478}","\u{1F9B8}","\u{1F9DC}","\u{1F47C}","\u{1F385}","\u{1F47B}"];
+let emojiIdx = 0;
+let fontBig = false;
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id !== 'homeScreen') { screenStack.push(id); document.getElementById('backBtn').classList.add('vis'); }
+  else { screenStack = ['homeScreen']; document.getElementById('backBtn').classList.remove('vis'); }
+  if (id === 'tmplScreen') renderTemplates();
+  if (id === 'savedScreen') renderSaved();
+  if (id === 'photoScreen') renderPhotos();
+  if (id === 'editorScreen') renderPage();
+}
+function goBack() {
+  screenStack.pop();
+  let prev = screenStack[screenStack.length - 1] || 'homeScreen';
+  showScreen(prev);
+}
+
+// ===== TEMPLATES =====
+let activeCat = Object.keys(T)[0];
+function renderTemplates() {
+  let tabs = document.getElementById('catTabs');
+  tabs.innerHTML = Object.keys(T).map(c =>
+    `<div class="cat-tab ${c===activeCat?'active':''}" onclick="activeCat='${c}';renderTemplates()">${c}</div>`
+  ).join('');
+  let grid = document.getElementById('tmplGrid');
+  grid.innerHTML = T[activeCat].map((t,i) =>
+    `<div class="tmpl-card" onclick="loadTemplate('${activeCat}',${i})">
+      <div class="tmpl-icon" style="background:${t.color}">${t.icon}</div>
+      <div class="tmpl-info"><h3>${t.name}</h3><p>${t.pages.length} pages</p></div>
+    </div>`
+  ).join('');
+}
+
+function loadTemplate(cat, idx) {
+  let t = T[cat][idx];
+  story = { name: t.name, pages: t.pages.map(p => ({...p, photo:null})), created: Date.now() };
+  pgIdx = 0;
+  showScreen('editorScreen');
+}
+
+function startBlank() {
+  story = { name:"My Story", pages:[{e:"\u{1F9D2}",t:"Tap here to write your story.",bg:"#D0EBFF",photo:null}], created:Date.now() };
+  pgIdx = 0;
+  showScreen('editorScreen');
+}
+
+// ===== EDITOR =====
+function renderPage() {
+  if (!story.pages.length) return;
+  let p = story.pages[pgIdx];
+  document.getElementById('canvas').style.background = p.bg || '#FFFFFF';
+  document.getElementById('bgIcon').textContent = p.e;
+  let cc = document.getElementById('charCircle');
+  if (p.photo) {
+    cc.innerHTML = `<img src="${p.photo}"><div class="lbl">Tap to change</div>`;
+  } else {
+    cc.innerHTML = `<span id="charE">${p.e}</span>`;
+  }
+  document.getElementById('sText').textContent = p.t;
+  document.getElementById('pgLabel').textContent = `Page ${pgIdx+1} of ${story.pages.length}`;
+}
+
+function saveCurrent() {
+  if (!story.pages.length) return;
+  story.pages[pgIdx].t = document.getElementById('sText').textContent;
+}
+
+function prevPg() { saveCurrent(); if (pgIdx > 0) { pgIdx--; renderPage(); } }
+function nextPg() { saveCurrent(); if (pgIdx < story.pages.length-1) { pgIdx++; renderPage(); } }
+
+function addPage() {
+  saveCurrent();
+  let newP = {e:"\u{1F9D2}",t:"Write your text here.",bg:"#D0EBFF",photo:null};
+  story.pages.splice(pgIdx+1, 0, newP);
+  pgIdx++;
+  renderPage();
+  toast('Page added!');
+}
+
+function delPage() {
+  if (story.pages.length <= 1) { toast('Need at least one page!'); return; }
+  story.pages.splice(pgIdx, 1);
+  if (pgIdx >= story.pages.length) pgIdx = story.pages.length - 1;
+  renderPage();
+  toast('Page deleted');
+}
+
+function toggleColors() {
+  let cp = document.getElementById('colorPanel');
+  cp.style.display = cp.style.display === 'none' ? 'block' : 'none';
+}
+function setColor(c) {
+  story.pages[pgIdx].bg = c;
+  document.getElementById('canvas').style.background = c;
+}
+
+function cycleEmoji() {
+  emojiIdx = (emojiIdx + 1) % EMOJIS.length;
+  story.pages[pgIdx].e = EMOJIS[emojiIdx];
+  story.pages[pgIdx].photo = null;
+  renderPage();
+}
+
+function toggleSize() {
+  fontBig = !fontBig;
+  document.getElementById('sText').style.fontSize = fontBig ? '28px' : '22px';
+}
+
+function pickPhoto() {
+  if (photos.length > 0) {
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:16px">';
+    photos.forEach((p,i) => {
+      html += `<img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;cursor:pointer;border:3px solid transparent;" onclick="applyPhoto(${i})">`;
+    });
+    html += '</div><button class="btn btn-p" onclick="document.getElementById(\'charPhotoIn\').click();closeExport()" style="margin:0 16px 16px;width:calc(100% - 32px)">Upload New Photo</button>';
+    let m = document.getElementById('exportModal');
+    m.querySelector('.modal').innerHTML = '<h2>Choose a Photo</h2>' + html + '<button class="btn btn-o" onclick="closeExport()" style="margin:0 16px 16px;width:calc(100% - 32px)">Cancel</button>';
+    m.classList.add('vis');
+  } else {
+    document.getElementById('charPhotoIn').click();
+  }
+}
+
+function applyPhoto(idx) {
+  story.pages[pgIdx].photo = photos[idx];
+  closeExport();
+  renderPage();
+}
+
+function handleCharPhoto(e) {
+  let file = e.target.files[0];
+  if (!file) return;
+  let reader = new FileReader();
+  reader.onload = function(ev) {
+    let data = ev.target.result;
+    story.pages[pgIdx].photo = data;
+    if (!photos.includes(data)) { photos.push(data); localStorage.setItem('sm_photos', JSON.stringify(photos)); }
+    renderPage();
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ===== PHOTOS =====
+function handlePhotoUp(e) {
+  Array.from(e.target.files).forEach(f => {
+    let r = new FileReader();
+    r.onload = ev => { photos.push(ev.target.result); localStorage.setItem('sm_photos', JSON.stringify(photos)); renderPhotos(); };
+    r.readAsDataURL(f);
+  });
+  e.target.value = '';
+}
+function renderPhotos() {
+  let g = document.getElementById('photoGrid');
+  if (!photos.length) { g.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--text-light);padding:20px;">No photos yet. Add your child\'s photo!</p>'; return; }
+  g.innerHTML = photos.map((p,i) =>
+    `<div style="position:relative"><img src="${p}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:12px;">
+    <button onclick="photos.splice(${i},1);localStorage.setItem('sm_photos',JSON.stringify(photos));renderPhotos();" style="position:absolute;top:4px;right:4px;background:rgba(255,0,0,0.8);color:white;border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:12px;">X</button></div>`
+  ).join('');
+}
+
+// ===== SAVE / LOAD =====
+function saveStory() {
+  saveCurrent();
+  let existing = saved.findIndex(s => s.created === story.created);
+  if (existing >= 0) saved[existing] = {...story};
+  else saved.push({...story});
+  localStorage.setItem('sm_stories', JSON.stringify(saved));
+  document.getElementById('sCnt').textContent = saved.length + ' saved';
+  toast('Story saved!');
+}
+
+function renderSaved() {
+  let list = document.getElementById('savedList');
+  document.getElementById('emptyState').style.display = saved.length ? 'none' : 'block';
+  document.getElementById('sCnt').textContent = saved.length + ' saved';
+  list.innerHTML = saved.map((s,i) =>
+    `<div class="saved-item">
+      <div class="thumb" style="background:${s.pages[0]?.bg||'#E9ECEF'}">${s.pages[0]?.e||'\u{1F4D6}'}</div>
+      <div onclick="loadSaved(${i})"><h3>${s.name}</h3><p>${s.pages.length} pages</p></div>
+      <button class="del-btn" onclick="event.stopPropagation();saved.splice(${i},1);localStorage.setItem('sm_stories',JSON.stringify(saved));renderSaved();">\u{1F5D1}</button>
+    </div>`
+  ).join('');
+}
+
+function loadSaved(idx) {
+  story = JSON.parse(JSON.stringify(saved[idx]));
+  pgIdx = 0;
+  showScreen('editorScreen');
+}
+
+// ===== PREVIEW =====
+function preview() {
+  saveCurrent();
+  prevIdx = 0;
+  showScreen('prevScreen');
+  renderPreview();
+}
+function renderPreview() {
+  let p = story.pages[prevIdx];
+  document.getElementById('prevBox').style.background = p.bg || '#FFFFFF';
+  let pc = document.getElementById('prevChar');
+  if (p.photo) { pc.innerHTML = `<img src="${p.photo}" style="width:100%;height:100%;object-fit:cover">`; }
+  else { pc.innerHTML = p.e; pc.style.fontSize = '64px'; }
+  document.getElementById('prevText').textContent = p.t;
+  document.getElementById('prevProg').textContent = `${prevIdx+1} / ${story.pages.length}`;
+}
+function prevPrev() { if (prevIdx > 0) { prevIdx--; renderPreview(); } }
+function nextPrev() { if (prevIdx < story.pages.length-1) { prevIdx++; renderPreview(); } }
+
+// ===== EXPORT =====
+function showExport() {
+  document.getElementById('exportModal').innerHTML = `<div class="modal">
+    <h2>\u{1F4E4} Export Story</h2>
+    <div class="exp-opt" onclick="exportPrint()"><span class="ei">\u{1F5A8}</span><div><h3>Print Story</h3><p>Print all pages to make a book</p></div></div>
+    <div class="exp-opt" onclick="exportSlideshow()"><span class="ei">\u{25B6}\u{FE0F}</span><div><h3>Auto Slideshow</h3><p>Play automatically (5s per page)</p></div></div>
+    <div class="exp-opt" onclick="shareData()"><span class="ei">\u{1F517}</span><div><h3>Copy Story Data</h3><p>Copy to clipboard to share</p></div></div>
+    <button class="btn btn-o" onclick="closeExport()" style="margin-top:12px;width:100%">Cancel</button>
+  </div>`;
+  document.getElementById('exportModal').classList.add('vis');
+}
+function closeExport() { document.getElementById('exportModal').classList.remove('vis'); }
+
+function exportPrint() {
+  saveCurrent();
+  closeExport();
+  let w = window.open('', '_blank');
+  let html = '<html><head><style>@page{margin:0.5in}body{font-family:sans-serif;margin:0}.page{page-break-after:always;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}.emoji{font-size:100px;margin-bottom:20px}.photo{width:200px;height:200px;border-radius:50%;object-fit:cover;margin-bottom:20px}.text{font-size:32px;font-weight:700;max-width:80%;line-height:1.4}</style></head><body>';
+  story.pages.forEach(p => {
+    html += `<div class="page" style="background:${p.bg}">`;
+    if (p.photo) html += `<img class="photo" src="${p.photo}">`;
+    else html += `<div class="emoji">${p.e}</div>`;
+    html += `<div class="text">${p.t}</div></div>`;
+  });
+  html += '</body></html>';
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
+}
+
+let autoTimer = null;
+function exportSlideshow() {
+  saveCurrent();
+  closeExport();
+  prevIdx = 0;
+  showScreen('prevScreen');
+  renderPreview();
+  autoTimer = setInterval(() => {
+    if (prevIdx < story.pages.length - 1) { prevIdx++; renderPreview(); }
+    else { clearInterval(autoTimer); autoTimer = null; toast('Story complete!'); }
+  }, 5000);
+}
+
+function shareData() {
+  saveCurrent();
+  let data = JSON.stringify({name:story.name, pages:story.pages.map(p => ({e:p.e,t:p.t,bg:p.bg}))});
+  navigator.clipboard.writeText(data).then(() => toast('Story data copied!')).catch(() => toast('Could not copy'));
+  closeExport();
+}
+
+// ===== TOAST =====
+function toast(msg) {
+  let t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('vis');
+  setTimeout(() => t.classList.remove('vis'), 2500);
+}
+
+// ===== INIT =====
+document.getElementById('sCnt').textContent = saved.length + ' saved';
+</script>
+</body>
+</html>
