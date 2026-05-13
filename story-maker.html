@@ -101,7 +101,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 
 /* preview */
 .prev-page{width:100%;height:calc(100vh - 60px);position:relative;display:flex;align-items:center;justify-content:center}
-.prev-page .prev-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.prev-page .prev-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .prev-page .prev-face{width:160px;height:160px;border-radius:50%;border:5px solid #fff;box-shadow:0 4px 20px rgba(0,0,0,.4);overflow:hidden;position:relative;z-index:2}
 .prev-page .prev-face img{width:100%;height:100%;object-fit:cover}
 .prev-page .prev-txt-box{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));padding:24px 24px 80px;z-index:3}
@@ -265,9 +265,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <!-- PREVIEW -->
 <div class="scr" id="prevScreen" style="padding:0;max-width:100%">
   <div class="prev-page" id="prevBox">
-    <img class="prev-bg hidden" id="prevBg">
+    <img class="prev-bg hidden" id="prevBg" style="z-index:1">
     <div style="position:absolute;inset:0;background:#E9ECEF;z-index:0" id="prevBgFallback"></div>
-    <div class="prev-face hidden" id="prevFace"><img id="prevFaceImg"></div>
+    <div class="prev-face hidden" id="prevFace" style="z-index:2"><img id="prevFaceImg"></div>
     <div class="prev-txt-box"><div class="prev-txt" id="prevTxt"></div></div>
     <div class="prev-prog" id="prevProg"></div>
     <div class="prev-nav">
@@ -1132,8 +1132,8 @@ function renderPrev(){
   let bg=document.getElementById('prevBg');
   let fb=document.getElementById('prevBgFallback');
   let fc=document.getElementById('prevFace');
-  if(p.scene){bg.classList.remove('hidden');bg.src=p.scene;fb.style.background='#333'}
-  else{bg.classList.add('hidden');fb.style.background='#E9ECEF'}
+  if(p.scene){bg.classList.remove('hidden');bg.src=p.scene;fb.style.display='none'}
+  else{bg.classList.add('hidden');fb.style.display='';fb.style.background='#E9ECEF'}
   if(p.face&&p.showFace!==false){fc.classList.remove('hidden');document.getElementById('prevFaceImg').src=p.face}
   else fc.classList.add('hidden');
   document.getElementById('prevTxt').textContent=p.text;
