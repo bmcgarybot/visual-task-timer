@@ -178,6 +178,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   <div class="tbar">
     <button class="tb" onclick="addPage()">&#10133; Page</button>
     <button class="tb" onclick="showTools()">&#9881; More</button>
+    <button class="tb" onclick="showArrange()">&#8645; Arrange</button>
   </div>
 
   <!-- Collapsible tools panel (hidden by default) -->
@@ -268,6 +269,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <!-- PHOTO PICKER MODAL -->
 <div class="mov" id="pickerModal">
   <div class="mod" id="pickerContent"></div>
+</div>
+
+<!-- ARRANGE MODAL -->
+<div class="mov" id="arrangeModal">
+  <div class="mod" id="arrangeContent" style="max-height:85vh;overflow-y:auto"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -834,6 +840,51 @@ function resizeFace(v){story.pages[pgIdx].faceSize=parseInt(v);let f=document.ge
 function toggleFace(){let p=story.pages[pgIdx];p.showFace=!p.showFace;renderPage();toast(p.showFace?'Face shown':'Face hidden')}
 function showTools(){let tp=document.getElementById('toolsPanel');tp.style.display=tp.style.display==='none'?'block':'none'}
 function toggleFaceSize(){let r=document.getElementById('faceSizeRow');r.style.display=r.style.display==='flex'?'none':'flex'}
+
+function showArrange(){
+  saveCur();
+  let html=`<h2>&#8645; Arrange Steps</h2>`;
+  html+=`<p style="font-size:13px;color:var(--txtL);margin-bottom:12px">Drag or use arrows to reorder. Tap \u{1F5D1} to remove.</p>`;
+  html+=`<div id="arrangeList">`;
+  story.pages.forEach((p,i)=>{
+    let preview=p.scene?`<img src="${p.scene}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0">`:`<div style="width:40px;height:40px;border-radius:6px;background:#E9ECEF;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">\u{1F4F7}</div>`;
+    html+=`<div class="arr-item" data-idx="${i}" style="display:flex;align-items:center;gap:8px;padding:10px 8px;border-bottom:1px solid #F1F3F5;background:white">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button onclick="moveStep(${i},-1)" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0;line-height:1;opacity:${i===0?0.2:1}" ${i===0?'disabled':''}>&#9650;</button>
+        <button onclick="moveStep(${i},1)" style="background:none;border:none;font-size:16px;cursor:pointer;padding:0;line-height:1;opacity:${i===story.pages.length-1?0.2:1}" ${i===story.pages.length-1?'disabled':''}>&#9660;</button>
+      </div>
+      ${preview}
+      <div style="flex:1;min-width:0"><span style="font-size:13px;line-height:1.3;display:block;overflow:hidden;text-overflow:ellipsis">${i+1}. ${p.text}</span></div>
+      <button onclick="removeFromArrange(${i})" style="background:none;border:none;font-size:16px;cursor:pointer;flex-shrink:0;padding:4px;color:var(--acc)">\u{1F5D1}</button>
+    </div>`;
+  });
+  html+=`</div>`;
+  html+=`<div style="display:flex;gap:8px;margin-top:12px">`;
+  html+=`<button class="btn bo" onclick="closeArrange()" style="flex:1">Cancel</button>`;
+  html+=`<button class="btn bp" onclick="doneArrange()" style="flex:1">Done</button>`;
+  html+=`</div>`;
+  document.getElementById('arrangeContent').innerHTML=html;
+  document.getElementById('arrangeModal').classList.add('vis');
+}
+
+function moveStep(idx,dir){
+  let newIdx=idx+dir;
+  if(newIdx<0||newIdx>=story.pages.length)return;
+  let tmp=story.pages[idx];
+  story.pages[idx]=story.pages[newIdx];
+  story.pages[newIdx]=tmp;
+  showArrange(); // re-render the list
+}
+
+function removeFromArrange(idx){
+  if(story.pages.length<=1){toast('Need at least 1 step!');return}
+  story.pages.splice(idx,1);
+  if(pgIdx>=story.pages.length)pgIdx=story.pages.length-1;
+  showArrange();
+}
+
+function closeArrange(){document.getElementById('arrangeModal').classList.remove('vis')}
+function doneArrange(){closeArrange();pgIdx=0;renderPage();toast('Steps arranged!')}
 // ===== PHOTO PICKING =====
 function pickSceneForPage(){showPicker('scene',d=>{story.pages[pgIdx].scene=d;renderPage()})}
 function pickFaceForPage(){showPicker('face',d=>{story.pages[pgIdx].face=d;renderPage()})}
