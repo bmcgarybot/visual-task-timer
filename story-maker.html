@@ -120,6 +120,27 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
   .cvs .text-overlay .stxt{font-size:16px}
   .cvs .face-overlay{width:80px;height:80px}
 }
+
+/* Tutorial overlay */
+.tut-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .3s}
+.tut-overlay.vis{opacity:1}
+.tut-card{background:white;border-radius:20px;padding:32px 24px;max-width:380px;width:100%;text-align:center;position:relative;transform:scale(0.9);transition:transform .3s}
+.tut-overlay.vis .tut-card{transform:scale(1)}
+.tut-card .tut-emoji{font-size:56px;margin-bottom:12px}
+.tut-card h2{font-size:20px;margin-bottom:8px;color:var(--txt)}
+.tut-card p{font-size:14px;color:var(--txtL);line-height:1.5;margin-bottom:20px}
+.tut-card .tut-highlight{background:linear-gradient(135deg,var(--pri),#8B83FF);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+.tut-dots{display:flex;gap:8px;justify-content:center;margin-bottom:20px}
+.tut-dot{width:10px;height:10px;border-radius:50%;background:#DEE2E6;transition:all .2s}
+.tut-dot.act{background:var(--pri);width:24px;border-radius:5px}
+.tut-btns{display:flex;gap:10px}
+.tut-skip{background:none;border:none;color:var(--txtL);font-size:13px;cursor:pointer;padding:8px}
+.tut-next{flex:1;background:var(--pri);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer}
+.tut-next:hover{background:var(--pri-dk,#5A52D5)}
+
+/* Privacy badge */
+.priv-badge{display:flex;align-items:center;gap:8px;background:#F1FFF4;border:1px solid #B7EBC4;border-radius:12px;padding:10px 14px;margin-bottom:20px;font-size:12px;color:#2B8A3E;line-height:1.4}
+.priv-badge .priv-icon{font-size:20px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -137,11 +158,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
     <h2>Social Story Maker</h2>
     <p>Create personalized visual stories using <strong>real photos</strong> of your child's world. Upload pictures of their bathroom, bedroom, school — then add their face right into the story!</p>
   </div>
+  <div class="priv-badge">
+    <span class="priv-icon">&#128274;</span>
+    <span><strong>100% Private.</strong> Your photos and stories are stored only on YOUR device. Nothing is uploaded to any server. No accounts, no tracking, no data collection. Ever.</span>
+  </div>
   <div class="agrid">
     <div class="acard" onclick="goTo('tmplScreen')"><div class="ico">&#127912;</div><h3>New Story</h3><p>Guided templates</p></div>
     <div class="acard" onclick="startBlank()"><div class="ico">&#128221;</div><h3>Blank Story</h3><p>Build from scratch</p></div>
     <div class="acard" onclick="goTo('savedScreen')"><div class="ico">&#128218;</div><h3>My Stories</h3><p id="sCnt">0 saved</p></div>
     <div class="acard" onclick="goTo('photoScreen')"><div class="ico">&#128247;</div><h3>My Photos</h3><p>Faces &amp; scenes</p></div>
+  </div>
+  <div style="text-align:center;margin-bottom:16px">
+    <button onclick="startTut()" style="background:none;border:2px solid var(--pri);border-radius:20px;padding:8px 20px;color:var(--pri);font-size:13px;font-weight:600;cursor:pointer">&#128218; How It Works</button>
   </div>
 </div>
 
@@ -277,6 +305,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- TUTORIAL OVERLAY -->
+<div class="tut-overlay" id="tutOverlay">
+  <div class="tut-card">
+    <div class="tut-emoji" id="tutEmoji"></div>
+    <h2 id="tutTitle"></h2>
+    <p id="tutBody"></p>
+    <div class="tut-dots" id="tutDots"></div>
+    <div class="tut-btns">
+      <button class="tut-skip" onclick="closeTut()">Skip</button>
+      <button class="tut-next" id="tutNextBtn" onclick="nextTut()">Next</button>
+    </div>
+  </div>
+</div>
 <input type="file" id="fInput" class="hidden" accept="image/*" capture="environment">
 <input type="file" id="fInput2" class="hidden" accept="image/*" capture="user">
 
@@ -1132,8 +1174,57 @@ function shareData(){
 // ===== TOAST =====
 function toast(m){let t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500)}
 
+// ===== TUTORIAL =====
+const TUT_STEPS=[
+  {emoji:"\u{1F4D6}\u{2728}",title:"Welcome to Story Maker!",body:"Create <span class='tut-highlight'>personalized social stories</span> using real photos from your child's world. Let's walk through how it works!"},
+  {emoji:"\u{1F3A8}",title:"Pick a Template",body:"Choose from <span class='tut-highlight'>22 guided templates</span> — bathroom routines, going to the store, doctor visits, feelings, safety, and more. Each one breaks the activity into <span class='tut-highlight'>small, clear steps</span>."},
+  {emoji:"\u{2705}",title:"Review & Customize Steps",body:"Before building, you'll see <span class='tut-highlight'>every step as a checklist</span>. Uncheck steps that don't apply to your child. Every kid is different!"},
+  {emoji:"\u{1F4F7}",title:"Add Real Photos",body:"Each step prompts you for a <span class='tut-highlight'>specific photo</span> — your actual bathroom, your child's bed, their school. You can also <span class='tut-highlight'>search free stock photos</span> right from the app."},
+  {emoji:"\u{1F9D2}",title:"Add Your Child's Face",body:"Upload a photo of your child and <span class='tut-highlight'>drag their face</span> right into the scene. Resize it, move it around — it's their story, with them in it."},
+  {emoji:"\u{2195}\u{FE0F}",title:"Arrange & Edit",body:"Use <span class='tut-highlight'>↕ Arrange</span> to reorder steps. Tap <span class='tut-highlight'>✕ Skip</span> to remove any step. Edit text by tapping on it. Make it fit YOUR child."},
+  {emoji:"\u{25B6}\u{FE0F}",title:"Preview & Export",body:"Play the story as a <span class='tut-highlight'>slideshow</span>, <span class='tut-highlight'>print it</span> to make a physical book, or save it for later. Stories auto-save to your device."},
+  {emoji:"\u{1F512}",title:"Your Privacy is Sacred",body:"<span class='tut-highlight'>Nothing leaves your device.</span> No server, no account, no uploads, no tracking. Your child's photos stay on YOUR phone. Period. We will never see them."},
+  {emoji:"\u{1F31F}",title:"You're Ready!",body:"Tap <span class='tut-highlight'>New Story</span> to pick a template, or <span class='tut-highlight'>Blank Story</span> to start from scratch. You've got this, and your child is lucky to have you."}
+];
+let tutIdx=0;
+
+function startTut(){
+  tutIdx=0;
+  renderTut();
+  let ov=document.getElementById('tutOverlay');
+  ov.style.display='flex';
+  requestAnimationFrame(()=>ov.classList.add('vis'));
+}
+
+function renderTut(){
+  let s=TUT_STEPS[tutIdx];
+  document.getElementById('tutEmoji').textContent='';
+  document.getElementById('tutEmoji').innerHTML=s.emoji;
+  document.getElementById('tutTitle').textContent=s.title;
+  document.getElementById('tutBody').innerHTML=s.body;
+  let dots=document.getElementById('tutDots');
+  dots.innerHTML=TUT_STEPS.map((_,i)=>`<div class="tut-dot ${i===tutIdx?'act':''}"></div>`).join('');
+  document.getElementById('tutNextBtn').textContent=tutIdx===TUT_STEPS.length-1?"Let's Go! \u{1F680}":'Next';
+}
+
+function nextTut(){
+  if(tutIdx<TUT_STEPS.length-1){tutIdx++;renderTut()}
+  else closeTut();
+}
+
+function closeTut(){
+  let ov=document.getElementById('tutOverlay');
+  ov.classList.remove('vis');
+  setTimeout(()=>ov.style.display='none',300);
+  localStorage.setItem('sm_tut_done','1');
+}
+
 // ===== INIT =====
 document.getElementById('sCnt').textContent=saved.length+' saved';
+// Auto-show tutorial on first visit
+if(!localStorage.getItem('sm_tut_done')){
+  setTimeout(startTut,600);
+}
 </script>
 </body>
 </html>
