@@ -941,18 +941,7 @@ function pickFaceForPage(){showPicker('face',d=>{story.pages[pgIdx].face=d;rende
 function showPicker(type,cb){
   let lib=type==='face'?faces:scenes;
   let label=type==='face'?'Face':'Scene';
-  let curPrompt=story.pages[pgIdx]?.prompt||'';
   let html=`<h2>Choose ${label} Photo</h2>`;
-
-  // Search bar for free stock photos (scenes only or both)
-  html+=`<div style="margin-bottom:12px">
-    <div style="display:flex;gap:6px">
-      <input type="text" id="imgSearchQ" placeholder="Search free photos..." value="${type==='scene'&&curPrompt?curPrompt.replace(/^(Photo of |Take a photo of )/i,''):''}" style="flex:1;padding:10px 12px;border:2px solid #E9ECEF;border-radius:10px;font-size:14px;outline:none">
-      <button onclick="searchPhotos('${type}')" class="btn bp" style="flex:none;padding:10px 16px">&#128269;</button>
-    </div>
-    <div id="searchResults" style="margin-top:8px"></div>
-    <div id="searchAttrib" style="font-size:10px;color:var(--txtL);margin-top:4px;display:none">Photos from <a href="https://openverse.org" target="_blank" style="color:var(--pri)">Openverse</a> (Creative Commons)</div>
-  </div>`;
 
   if(lib.length){
     html+=`<p style="font-size:12px;font-weight:600;color:var(--txtL);margin-bottom:6px">My ${label}s:</p>`;
@@ -966,68 +955,8 @@ function showPicker(type,cb){
   document.getElementById('pickerModal').classList.add('vis');
   window._pickerCb=cb;
   window._pickerType=type;
-  // Auto-search if there's a prompt
-  if(type==='scene'&&curPrompt){
-    setTimeout(()=>searchPhotos(type),100);
-  }
 }
 
-async function searchPhotos(type){
-  let q=document.getElementById('imgSearchQ').value.trim();
-  if(!q){toast('Type something to search');return}
-  let res=document.getElementById('searchResults');
-  res.innerHTML='<p style="text-align:center;padding:12px;color:var(--txtL);font-size:13px">Searching...</p>';
-  document.getElementById('searchAttrib').style.display='block';
-  try{
-    let resp=await fetch(`https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=12&license_type=all`,{headers:{'User-Agent':'StoryMaker/1.0'}});
-    let data=await resp.json();
-    let imgs=data.results||[];
-    if(!imgs.length){res.innerHTML='<p style="text-align:center;padding:12px;color:var(--txtL);font-size:13px">No results. Try different words.</p>';return}
-    let grid='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
-    imgs.forEach((img,i)=>{
-      let thumb=img.thumbnail||img.url;
-      let full=img.url||thumb;
-      grid+=`<img src="${thumb}" data-full="${full}" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;cursor:pointer;background:#E9ECEF" onclick="pickSearchResult(this)" onerror="this.style.display='none'">`;
-    });
-    grid+='</div>';
-    res.innerHTML=grid;
-  }catch(e){
-    res.innerHTML='<p style="text-align:center;padding:12px;color:var(--txtL);font-size:13px">Search failed. Try uploading instead.</p>';
-  }
-}
-
-function pickSearchResult(el){
-  let url=el.dataset.full||el.src;
-  // Download image to data URL so it works offline
-  let img=new Image();
-  img.crossOrigin='anonymous';
-  img.onload=function(){
-    let c=document.createElement('canvas');
-    c.width=img.naturalWidth;c.height=img.naturalHeight;
-    c.getContext('2d').drawImage(img,0,0);
-    try{
-      let dataUrl=c.toDataURL('image/jpeg',0.85);
-      let type=window._pickerType;
-      if(type==='scene'){if(!scenes.includes(dataUrl)){scenes.push(dataUrl);localStorage.setItem('sm_scenes',JSON.stringify(scenes))}}
-      else{if(!faces.includes(dataUrl)){faces.push(dataUrl);localStorage.setItem('sm_faces',JSON.stringify(faces))}}
-      closePickerModal();
-      if(window._pickerCb)window._pickerCb(dataUrl);
-      toast('Photo added!');
-    }catch(e){
-      // CORS blocked — use URL directly
-      closePickerModal();
-      if(window._pickerCb)window._pickerCb(url);
-      toast('Photo added!');
-    }
-  };
-  img.onerror=function(){
-    // Fallback: use URL directly
-    closePickerModal();
-    if(window._pickerCb)window._pickerCb(url);
-    toast('Photo added!');
-  };
-  img.src=url;
-}
 function closePickerModal(){document.getElementById('pickerModal').classList.remove('vis')}
 
 function pickFromLib(type,idx){
